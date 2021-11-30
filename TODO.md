@@ -1,0 +1,1 @@
+Routing an Hand Header Sec-WebSocket-Protocol (z.B. "ocpp1.6,ocpp1.5")
