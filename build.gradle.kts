@@ -3,6 +3,7 @@ import java.util.*
 plugins {
     kotlin("jvm") apply false
     id("com.github.hierynomus.license")
+    id("io.gitlab.arturbosch.detekt")
 }
 
 allprojects {
@@ -18,7 +19,12 @@ subprojects {
 
     ext.set("jvmTarget", "1.8")
 
-    apply(plugin = "license")
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+    detekt {
+        config = files(rootProject.file("detekt-config.yml"))
+    }
+
+    apply(plugin = "com.github.hierynomus.license")
     license {
         header = rootProject.file("LICENSE-HEADER.txt")
         strictCheck = true

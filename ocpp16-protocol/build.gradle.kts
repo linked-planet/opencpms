@@ -15,6 +15,12 @@ dependencies {
     implementation(kotlin("stdlib"))
 }
 
+// Disable static code analysis for generated classes
+tasks.withType<io.gitlab.arturbosch.detekt.Detekt>().configureEach {
+    // include("**/special/package/**") // only analyze a sub package inside src/main/kotlin
+    exclude("**/io/opencpms/ocpp16/protocol/message**") // but exclude our legacy internal package
+}
+
 // Generate classes for all the stuff
 val sourceDir = "$projectDir/src/main/json/"
 val outputDir = "$buildDir/generated-sources/kotlin"
