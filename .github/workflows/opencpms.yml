@@ -25,5 +25,8 @@ jobs:
           java-version: '8'
           distribution: 'adopt'
 
+      - name: License check
+        run: ./gradlew license
+
       - name: Gradle Build
         run: ./gradlew build
