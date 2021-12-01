@@ -13,5 +13,6 @@ pluginManagement {
     }
     plugins {
         kotlin("jvm") version jvmPluginVersion apply false
+        id("com.github.hierynomus.license") version "0.16.1" apply false
     }
 }

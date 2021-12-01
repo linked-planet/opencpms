@@ -5,18 +5,10 @@ plugins {
     kotlin("jvm")
 }
 
-group = "io.opencpms"
-version = "1.0-SNAPSHOT"
-
 buildscript {
     dependencies {
         classpath("net.pwall.json:json-kotlin-schema-codegen:0.63")
     }
-}
-
-repositories {
-    mavenCentral()
-    mavenLocal()
 }
 
 dependencies {

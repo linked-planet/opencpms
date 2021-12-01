@@ -3,14 +3,6 @@ plugins {
     kotlin("jvm")
 }
 
-repositories {
-    mavenCentral()
-    mavenLocal()
-}
-
-group = "io.opencpms"
-version = "1.0-SNAPSHOT"
-
 application {
     mainClass.set("io.opencpms.ocpp16j.endpoint.ApplicationKt")
 }
