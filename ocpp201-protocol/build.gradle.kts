@@ -40,7 +40,6 @@ val generateTask = tasks.register<GenerateTask>("generate") {
     this.outputDirectory = outputDir
     this.outputPackageName = packageName
 }
-project.tasks.findByName("compileKotlin")?.dependsOn(generateTask)
 
 abstract class GenerateTask : DefaultTask() {
 
