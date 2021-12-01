@@ -5,7 +5,7 @@ plugins {
     kotlin("jvm")
 }
 
-group = "com.linkedplanet.opencms"
+group = "io.opencpms"
 version = "1.0-SNAPSHOT"
 
 buildscript {
