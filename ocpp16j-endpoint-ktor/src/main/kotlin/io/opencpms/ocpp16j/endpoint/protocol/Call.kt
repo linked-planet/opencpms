@@ -18,14 +18,19 @@
  */
 package io.opencpms.ocpp16j.endpoint.protocol
 
-import io.opencpms.ocpp16.protocol.*
+import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
+import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
+
+const val CALL_MESSAGE_TYPE_ID = 2
+const val CALL_RESULT_MESSAGE_TYPE_ID = 3
+const val CALL_ERROR_MESSAGE_TYPE_ID = 4
 
 data class Call(
     val uniqueId: String,
     val actionName: String,
     val payload: Ocpp16IncomingMessage
 ) {
-    val messageTypeId = 2
+    val messageTypeId = CALL_MESSAGE_TYPE_ID
 }
 
 interface CallResponse
@@ -34,7 +39,7 @@ data class CallResult(
     val uniqueId: String,
     val payload: Ocpp16OutgoingMessage
 ) : CallResponse {
-    val messageTypeId = 3
+    val messageTypeId = CALL_RESULT_MESSAGE_TYPE_ID
 }
 
 data class CallError(
@@ -43,7 +48,7 @@ data class CallError(
     val errorDescription: String = "",
     val errorDetails: String
 ) : CallResponse {
-    val messageTypeId: Int = 4
+    val messageTypeId: Int = CALL_ERROR_MESSAGE_TYPE_ID
 }
 
 enum class Ocpp16ErrorCode {

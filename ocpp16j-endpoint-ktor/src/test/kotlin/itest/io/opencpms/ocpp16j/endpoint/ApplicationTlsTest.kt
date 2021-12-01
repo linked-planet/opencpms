@@ -18,16 +18,21 @@
  */
 package itest.io.opencpms.ocpp16j.endpoint
 
-import io.ktor.client.*
-import io.ktor.client.features.websocket.*
-import io.ktor.server.engine.*
-import io.ktor.server.jetty.*
-import io.mockk.*
-import io.opencpms.ocpp16j.endpoint.*
-import io.opencpms.ocpp16j.endpoint.config.*
-import kotlinx.coroutines.runBlocking
-import org.junit.*
+import io.ktor.client.HttpClient
+import io.ktor.client.features.websocket.webSocket
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.jetty.Jetty
+import io.mockk.every
+import io.mockk.mockk
+import io.opencpms.ocpp16j.endpoint.config.AppConfig
+import io.opencpms.ocpp16j.endpoint.config.TlsConfig
+import io.opencpms.ocpp16j.endpoint.createApplicationEngineEnvironment
+import io.opencpms.ocpp16j.endpoint.createContext
 import java.io.File
+import kotlinx.coroutines.runBlocking
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
 import javax.net.ssl.SSLHandshakeException
 import kotlin.concurrent.thread
 import kotlin.test.assertFailsWith

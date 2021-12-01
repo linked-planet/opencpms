@@ -19,14 +19,22 @@
 package itest.io.opencpms.ocpp16j.endpoint.websocket
 
 import arrow.core.right
-import io.ktor.http.*
-import io.ktor.server.testing.*
-import io.mockk.*
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.testing.handleRequest
+import io.ktor.server.testing.withTestApplication
+import io.mockk.clearAllMocks
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.spyk
 import io.opencpms.ocpp16.service.Ocpp16AuthService
 import io.opencpms.ocpp16j.endpoint.config.AppConfig
 import io.opencpms.ocpp16j.endpoint.websocket.configureSockets
-import org.junit.*
-import org.kodein.di.*
+import org.junit.After
+import org.junit.Test
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.singleton
 import kotlin.test.assertEquals
 
 class WebsocketEndpointTest {

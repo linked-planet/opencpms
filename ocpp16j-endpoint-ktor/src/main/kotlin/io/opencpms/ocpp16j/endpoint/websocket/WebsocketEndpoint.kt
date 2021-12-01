@@ -18,23 +18,33 @@
  */
 package io.opencpms.ocpp16j.endpoint.websocket
 
-import io.ktor.application.*
-import io.ktor.features.*
-import io.ktor.http.cio.websocket.*
-import io.ktor.routing.*
-import io.ktor.websocket.*
+import io.ktor.application.Application
+import io.ktor.application.install
+import io.ktor.features.CallLogging
+import io.ktor.features.DefaultHeaders
+import io.ktor.http.cio.websocket.pingPeriod
+import io.ktor.http.cio.websocket.timeout
+import io.ktor.routing.routing
+import io.ktor.websocket.WebSockets
+import io.ktor.websocket.webSocket
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.service.*
-import org.kodein.di.*
-import org.kodein.di.ktor.*
+import io.opencpms.ocpp16.service.Ocpp16IncomingMessageService
+import io.opencpms.ocpp16.service.Ocpp16Session
 import java.time.Duration
+import org.kodein.di.DI
+import org.kodein.di.instance
+import org.kodein.di.ktor.closestDI
+import org.kodein.di.ktor.di
 
 private const val OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE = "ocpp1.6"
 
+private const val PING_PERIOD_SEC = 15L
+private const val TIMEOUT_SEC = 15L
+
 fun Application.configureSockets(context: DI) {
     install(WebSockets) {
-        pingPeriod = Duration.ofSeconds(15)
-        timeout = Duration.ofSeconds(15)
+        pingPeriod = Duration.ofSeconds(PING_PERIOD_SEC)
+        timeout = Duration.ofSeconds(TIMEOUT_SEC)
         maxFrameSize = Long.MAX_VALUE
         masking = false
     }

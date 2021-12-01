@@ -19,17 +19,24 @@
 package itest.io.opencpms.ocpp16j.endpoint.websocket
 
 import arrow.core.right
-import io.ktor.http.cio.websocket.*
-import io.ktor.server.testing.*
-import io.mockk.*
+import io.ktor.http.cio.websocket.Frame
+import io.ktor.http.cio.websocket.readText
+import io.ktor.server.testing.withTestApplication
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.spyk
 import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
-import io.opencpms.ocpp16.service.*
+import io.opencpms.ocpp16.service.Ocpp16AuthService
+import io.opencpms.ocpp16.service.Ocpp16IncomingMessageService
+import io.opencpms.ocpp16.service.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.config.AppConfig
 import io.opencpms.ocpp16j.endpoint.websocket.configureSockets
-import org.junit.Test
-import org.kodein.di.*
 import java.io.File
 import java.time.OffsetDateTime
+import org.junit.Test
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.singleton
 import kotlin.test.assertNotNull
 
 class WebsocketSessionTest {

@@ -1,4 +1,5 @@
-import net.pwall.json.schema.codegen.*
+import net.pwall.json.schema.codegen.CodeGenerator
+import net.pwall.json.schema.codegen.TargetLanguage
 import net.pwall.json.schema.parser.Parser
 
 plugins {

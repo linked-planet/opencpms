@@ -18,9 +18,17 @@
  */
 package io.opencpms.ocpp16j.endpoint.util
 
-import com.google.gson.*
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
 import com.google.gson.JsonNull.INSTANCE
+import com.google.gson.JsonPrimitive
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
+import io.opencpms.ocpp16j.endpoint.protocol.CALL_MESSAGE_TYPE_ID
 import io.opencpms.ocpp16j.endpoint.protocol.Call
 import java.lang.reflect.Type
 import java.time.OffsetDateTime
@@ -32,8 +40,9 @@ val GSON: Gson = GsonBuilder()
     .setPrettyPrinting()
     .create()
 
-const val OCPP16_PACKAGE_NAME = "io.opencpms.ocpp16.protocol.message"
+private const val OCPP16_PACKAGE_NAME = "io.opencpms.ocpp16.protocol.message"
 
+@Suppress("MagicNumber")
 object CallDeserializer : JsonDeserializer<Call> {
 
     override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): Call {
@@ -43,7 +52,7 @@ object CallDeserializer : JsonDeserializer<Call> {
         require(jsonArray.size() == 4)
 
         val messageTypeId = jsonArray.get(0).asInt
-        require(messageTypeId == 2) // = Call
+        require(messageTypeId == CALL_MESSAGE_TYPE_ID) // = Call
 
         val uniqueId = jsonArray.get(1).asString
         val actionName = jsonArray.get(2).asString

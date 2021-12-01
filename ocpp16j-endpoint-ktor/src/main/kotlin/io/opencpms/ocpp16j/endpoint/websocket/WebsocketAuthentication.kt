@@ -18,9 +18,13 @@
  */
 package io.opencpms.ocpp16j.endpoint.websocket
 
-import io.ktor.application.*
-import io.ktor.auth.*
-import io.ktor.routing.*
+import io.ktor.application.ApplicationCallPipeline
+import io.ktor.application.call
+import io.ktor.auth.basicAuthenticationCredentials
+import io.ktor.routing.Route
+import io.ktor.routing.RouteSelector
+import io.ktor.routing.RouteSelectorEvaluation
+import io.ktor.routing.RoutingResolveContext
 import io.opencpms.ocpp16.service.Ocpp16AuthService
 import io.opencpms.ocpp16j.endpoint.config.AppConfig
 import org.kodein.di.instance

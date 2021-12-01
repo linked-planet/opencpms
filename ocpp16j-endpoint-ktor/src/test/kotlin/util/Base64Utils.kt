@@ -18,7 +18,7 @@
  */
 package util
 
-import java.util.*
+import java.util.Base64
 
 fun encodeBase64(str: String): String = Base64.getEncoder().encodeToString(str.toByteArray())
 

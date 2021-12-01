@@ -18,7 +18,7 @@
  */
 package util
 
-import io.ktor.network.tls.certificates.*
+import io.ktor.network.tls.certificates.generateCertificate
 import java.io.File
 
 fun main() {

@@ -19,12 +19,21 @@
 package io.opencpms.ocpp16j.endpoint.websocket
 
 import arrow.core.Either
-import io.ktor.http.*
-import io.ktor.http.cio.websocket.*
-import io.ktor.websocket.*
-import io.opencpms.ocpp16.protocol.*
-import io.opencpms.ocpp16.service.*
-import io.opencpms.ocpp16j.endpoint.protocol.*
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.cio.websocket.CloseReason
+import io.ktor.http.cio.websocket.Frame
+import io.ktor.http.cio.websocket.close
+import io.ktor.http.cio.websocket.readText
+import io.ktor.websocket.DefaultWebSocketServerSession
+import io.ktor.websocket.application
+import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
+import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
+import io.opencpms.ocpp16.service.Ocpp16Session
+import io.opencpms.ocpp16.service.Ocpp16SessionManager
+import io.opencpms.ocpp16j.endpoint.protocol.Call
+import io.opencpms.ocpp16j.endpoint.protocol.CallError
+import io.opencpms.ocpp16j.endpoint.protocol.CallResult
+import io.opencpms.ocpp16j.endpoint.protocol.Ocpp16ErrorCode
 import io.opencpms.ocpp16j.endpoint.util.GSON
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.runBlocking
@@ -72,6 +81,7 @@ class WebsocketSession(
     }
 }
 
+@Suppress("SwallowedException") // TODO: Fix me!
 fun DefaultWebSocketServerSession.ocpp16Session(
     handler: suspend WebsocketSession.() -> Unit
 ) {
@@ -88,6 +98,7 @@ fun DefaultWebSocketServerSession.ocpp16Session(
             runBlocking {
                 handler(session)
             }
+
         } catch (e: ClosedReceiveChannelException) {
             // TODO: handle onClose
         }

@@ -22,14 +22,14 @@ import com.typesafe.config.ConfigFactory
 import java.io.File
 
 class AppConfig {
-    private val appConfig = ConfigFactory.load().getConfig("app")
-    val hostname: String = appConfig.getString("hostname")
-    val port: Int = appConfig.getInt("port")
+    private val appConfigBlock = ConfigFactory.load().getConfig("app")
+    val hostname: String = appConfigBlock.getString("hostname")
+    val port: Int = appConfigBlock.getInt("port")
 
-    private val basicAuthConfig = appConfig.getConfig("basicAuth")
-    val useBasicAuth = basicAuthConfig.getBoolean("enabled")
+    private val basicAuthConfigBlock = appConfigBlock.getConfig("basicAuth")
+    val useBasicAuth = basicAuthConfigBlock.getBoolean("enabled")
 
-    private val tlsConfigBlock = appConfig.getConfig("tls")
+    private val tlsConfigBlock = appConfigBlock.getConfig("tls")
     val useTls: Boolean = tlsConfigBlock.getBoolean("enabled")
     val tlsConfig: TlsConfig? = if (useTls) {
         val keyStoreFile: File = tlsConfigBlock.getString("keyStorePath")

@@ -18,13 +18,18 @@
  */
 package io.opencpms.ocpp16j.endpoint
 
-import io.ktor.server.engine.*
-import io.ktor.server.jetty.*
+import io.ktor.server.engine.applicationEngineEnvironment
+import io.ktor.server.engine.connector
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.engine.sslConnector
+import io.ktor.server.jetty.Jetty
 import io.opencpms.ocpp16.service.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.config.AppConfig
 import io.opencpms.ocpp16j.endpoint.websocket.configureSockets
-import org.kodein.di.*
 import java.security.KeyStore
+import org.kodein.di.DI
+import org.kodein.di.bind
+import org.kodein.di.singleton
 
 fun main() {
     val appConfig = AppConfig()
