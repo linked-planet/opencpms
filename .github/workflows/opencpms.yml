@@ -28,5 +28,8 @@ jobs:
       - name: License check
         run: ./gradlew license
 
+      - name: Detekt check
+        run: ./gradlew detekt
+
       - name: Gradle Build
         run: ./gradlew build
