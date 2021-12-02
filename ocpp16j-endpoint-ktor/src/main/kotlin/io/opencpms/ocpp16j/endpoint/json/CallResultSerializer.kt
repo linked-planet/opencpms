@@ -16,16 +16,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16.service
+package io.opencpms.ocpp16j.endpoint.json
 
-import arrow.core.Either
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
+import com.google.gson.JsonArray
+import com.google.gson.JsonElement
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
+import io.opencpms.ocpp16j.endpoint.protocol.CallResult
+import io.opencpms.ocpp16j.endpoint.util.GSON
+import java.lang.reflect.Type
 
-interface Ocpp16IncomingMessageService {
+object CallResultSerializer : JsonSerializer<CallResult> {
 
-    fun handleMessage(
-        session: Ocpp16Session,
-        message: Ocpp16IncomingMessage
-    ): Either<Ocpp16Error, Ocpp16OutgoingMessage>
+    override fun serialize(src: CallResult?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+        require(src != null)
+
+        val payload = GSON.toJsonTree(src.payload)
+
+        val jsonArray = JsonArray()
+        jsonArray.add(src.messageTypeId)
+        jsonArray.add(src.uniqueId)
+        jsonArray.add(payload)
+        return jsonArray
+    }
 }

@@ -16,16 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16.service
+package util
 
-import arrow.core.Either
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
+import java.io.File
 
-interface Ocpp16IncomingMessageService {
-
-    fun handleMessage(
-        session: Ocpp16Session,
-        message: Ocpp16IncomingMessage
-    ): Either<Ocpp16Error, Ocpp16OutgoingMessage>
-}
+fun readFileAsText(fileName: String): String = File(fileName).readText(Charsets.UTF_8)

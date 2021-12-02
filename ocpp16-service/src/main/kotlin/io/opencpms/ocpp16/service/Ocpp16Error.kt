@@ -18,14 +18,9 @@
  */
 package io.opencpms.ocpp16.service
 
-import arrow.core.Either
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
+open class Ocpp16Error(val reason: String, val details: String? = null)
 
-interface Ocpp16IncomingMessageService {
-
-    fun handleMessage(
-        session: Ocpp16Session,
-        message: Ocpp16IncomingMessage
-    ): Either<Ocpp16Error, Ocpp16OutgoingMessage>
-}
+class NotSupportedError(reason: String, details: String? = null) : Ocpp16Error(reason, details)
+class InternalError(reason: String, details: String? = null) : Ocpp16Error(reason, details)
+class ProtocolError(reason: String, details: String? = null) : Ocpp16Error(reason, details)
+class SecurityError(reason: String, details: String? = null) : Ocpp16Error(reason, details)

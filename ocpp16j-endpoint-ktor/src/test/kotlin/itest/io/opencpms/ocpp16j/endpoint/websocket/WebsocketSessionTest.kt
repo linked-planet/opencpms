@@ -18,6 +18,7 @@
  */
 package itest.io.opencpms.ocpp16j.endpoint.websocket
 
+import arrow.core.left
 import arrow.core.right
 import io.ktor.http.cio.websocket.Frame
 import io.ktor.http.cio.websocket.readText
@@ -25,18 +26,22 @@ import io.ktor.server.testing.withTestApplication
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import io.mockk.verify
 import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
 import io.opencpms.ocpp16.service.Ocpp16AuthService
 import io.opencpms.ocpp16.service.Ocpp16IncomingMessageService
 import io.opencpms.ocpp16.service.Ocpp16SessionManager
+import io.opencpms.ocpp16.service.ProtocolError
 import io.opencpms.ocpp16j.endpoint.config.AppConfig
+import io.opencpms.ocpp16j.endpoint.protocol.CALL_MESSAGE_TYPE_ID
 import io.opencpms.ocpp16j.endpoint.websocket.configureSockets
-import java.io.File
 import java.time.OffsetDateTime
 import org.junit.Test
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.singleton
+import util.readFileAsText
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
 class WebsocketSessionTest {
@@ -54,30 +59,304 @@ class WebsocketSessionTest {
     }
 
     @Test
-    fun testMessage() {
-        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
-        every { incomingMessageService.handleMessage(any(), any()) }.returns(
-            BootNotificationResponse(
-                BootNotificationResponse.Status.Accepted,
-                OffsetDateTime.now(),
-                0
-            ).right()
+    fun testCallAndCallResult() {
+        // Mocking
+        val mockResponse = BootNotificationResponse(
+            BootNotificationResponse.Status.Accepted,
+            OffsetDateTime.parse("2021-12-02T20:45:12.208+01:00"),
+            10L
         )
+        val mockUniqueId = "adb4f199-89fa-40b0-86c0-29b5ec1bd253"
+        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
+        every { incomingMessageService.handleMessage(any(), any()) }.returns(mockResponse.right())
 
+        // Test
         withTestApplication({ configureSockets(testContext) }) {
             handleWebSocketConversation("/ocpp/16/test",
+                setup = {
+                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                },
                 callback = { incoming, outgoing ->
-                    val file = File("src/test/resources/BootNotificationRequest.json")
-                    val actionName = file.name.substringBeforeLast(".").substringBeforeLast("-")
-                    val requestActionJsonStr = file.readText()
-                    outgoing.send(Frame.Text("[2,\"19223201\",\"$actionName\", $requestActionJsonStr]"))
+                    val call = createTestCall(mockUniqueId)
+                    outgoing.send(Frame.Text(call))
 
                     val response = (incoming.receive() as Frame.Text).readText()
                     assertNotNull(response)
-                }, setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+
+                    val expectedResponseJson = """
+                        [
+                          3,
+                          "adb4f199-89fa-40b0-86c0-29b5ec1bd253",
+                          {
+                            "status": "Accepted",
+                            "currentTime": "2021-12-02T20:45:12.208+01:00",
+                            "interval": 10
+                          }
+                        ]
+                    """.trimIndent()
+                    assertEquals(expectedResponseJson, response)
                 }
             )
         }
+
+        verify(exactly = 1) { incomingMessageService.handleMessage(any(), any()) }
+    }
+
+    @Test
+    fun testCallAndCallError() {
+        // Mocking
+        val mockUUID = "d16d2312-03fe-4dd8-8d06-ea29b7ca2269"
+        val mockResponse = ProtocolError(
+            "reason",
+            "details"
+        )
+        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
+        every { incomingMessageService.handleMessage(any(), any()) }.returns(mockResponse.left())
+
+        // Test
+        withTestApplication({ configureSockets(testContext) }) {
+            handleWebSocketConversation("/ocpp/16/test",
+                setup = {
+                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                },
+                callback = { incoming, outgoing ->
+                    val call = createTestCall(mockUUID)
+                    outgoing.send(Frame.Text(call))
+
+                    val response = (incoming.receive() as Frame.Text).readText()
+                    assertNotNull(response)
+
+                    val expectedResponseJson = """
+                        [
+                          4,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "ProtocolError",
+                          "reason",
+                          {
+                            "description": "details"
+                          }
+                        ]
+                    """.trimIndent()
+                    assertEquals(expectedResponseJson, response)
+                }
+            )
+        }
+
+        verify(exactly = 1) { incomingMessageService.handleMessage(any(), any()) }
+    }
+
+    @Test
+    fun testCallWithoutMessageTypeId() {
+        // Mocking
+        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
+
+        // Test
+        withTestApplication({ configureSockets(testContext) }) {
+            handleWebSocketConversation("/ocpp/16/test",
+                setup = {
+                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                },
+                callback = { incoming, outgoing ->
+                    val call = """
+                         [
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "BootNotificationRequest",
+                          {
+                            "chargePointVendor": "ex dolor",
+                            "chargePointModel": "veniam voluptate u"
+                          }
+                        ]
+                    """.trimIndent()
+                    outgoing.send(Frame.Text(call))
+
+                    val response = (incoming.receive() as Frame.Text).readText()
+                    assertNotNull(response)
+
+                    val expectedResponseJson = """
+                        [
+                          4,
+                          "UNKNOWN",
+                          "GenericError",
+                          "Could not parse call, invalid [json-]format",
+                          {}
+                        ]
+                    """.trimIndent()
+                    assertEquals(expectedResponseJson, response)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testCallWithoutUniqueId() {
+        // Mocking
+        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
+
+        // Test
+        withTestApplication({ configureSockets(testContext) }) {
+            handleWebSocketConversation("/ocpp/16/test",
+                setup = {
+                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                },
+                callback = { incoming, outgoing ->
+                    val call = """
+                         [
+                          2,
+                          "BootNotificationRequest",
+                          {
+                            "chargePointVendor": "ex dolor",
+                            "chargePointModel": "veniam voluptate u"
+                          }
+                        ]
+                    """.trimIndent()
+                    outgoing.send(Frame.Text(call))
+
+                    val response = (incoming.receive() as Frame.Text).readText()
+                    assertNotNull(response)
+
+                    val expectedResponseJson = """
+                        [
+                          4,
+                          "UNKNOWN",
+                          "GenericError",
+                          "Could not parse call, invalid [json-]format",
+                          {}
+                        ]
+                    """.trimIndent()
+                    assertEquals(expectedResponseJson, response)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testCallWithoutAction() {
+        // Mocking
+        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
+
+        // Test
+        withTestApplication({ configureSockets(testContext) }) {
+            handleWebSocketConversation("/ocpp/16/test",
+                setup = {
+                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                },
+                callback = { incoming, outgoing ->
+                    val call = """
+                         [
+                          2,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          {
+                            "chargePointVendor": "ex dolor",
+                            "chargePointModel": "veniam voluptate u"
+                          }
+                        ]
+                    """.trimIndent()
+                    outgoing.send(Frame.Text(call))
+
+                    val response = (incoming.receive() as Frame.Text).readText()
+                    assertNotNull(response)
+
+                    val expectedResponseJson = """
+                        [
+                          4,
+                          "UNKNOWN",
+                          "GenericError",
+                          "Could not parse call, invalid [json-]format",
+                          {}
+                        ]
+                    """.trimIndent()
+                    assertEquals(expectedResponseJson, response)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testCallWithoutPayload() {
+        // Mocking
+        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
+
+        // Test
+        withTestApplication({ configureSockets(testContext) }) {
+            handleWebSocketConversation("/ocpp/16/test",
+                setup = {
+                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                },
+                callback = { incoming, outgoing ->
+                    val call = """
+                         [
+                          2,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "BootNotificationRequest"
+                        ]
+                    """.trimIndent()
+                    outgoing.send(Frame.Text(call))
+
+                    val response = (incoming.receive() as Frame.Text).readText()
+                    assertNotNull(response)
+
+                    val expectedResponseJson = """
+                        [
+                          4,
+                          "UNKNOWN",
+                          "GenericError",
+                          "Could not parse call, invalid [json-]format",
+                          {}
+                        ]
+                    """.trimIndent()
+                    assertEquals(expectedResponseJson, response)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testCallWithInvalidJsonPayload() {
+        // Mocking
+        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
+
+        // Test
+        withTestApplication({ configureSockets(testContext) }) {
+            handleWebSocketConversation("/ocpp/16/test",
+                setup = {
+                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                },
+                callback = { incoming, outgoing ->
+                    val call = """
+                         [
+                          2,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "BootNotificationRequest",
+                          {
+                            "chargePointVendor": "ex dolor",
+                            "chargePointModel": "veniam voluptate u"
+                          
+                        ]
+                    """.trimIndent()
+                    outgoing.send(Frame.Text(call))
+
+                    val response = (incoming.receive() as Frame.Text).readText()
+                    assertNotNull(response)
+
+                    val expectedResponseJson = """
+                        [
+                          4,
+                          "UNKNOWN",
+                          "GenericError",
+                          "Could not parse call, invalid [json-]format",
+                          {}
+                        ]
+                    """.trimIndent()
+                    assertEquals(expectedResponseJson, response)
+                }
+            )
+        }
+    }
+
+    private fun createTestCall(uniqueId: String): String {
+        val actionPath = "src/test/resources/BootNotificationRequest.json"
+        val actionName = "BootNotificationRequest"
+        val actionJsonStr = readFileAsText(actionPath)
+        return "[$CALL_MESSAGE_TYPE_ID,\"$uniqueId\",\"$actionName\", $actionJsonStr]"
     }
 }
