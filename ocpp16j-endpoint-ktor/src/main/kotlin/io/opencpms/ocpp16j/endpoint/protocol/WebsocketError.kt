@@ -23,10 +23,33 @@ import io.opencpms.ocpp16.service.Ocpp16Error
 import io.opencpms.ocpp16.service.ProtocolError
 import io.opencpms.ocpp16.service.SecurityError
 
-class FormationViolation(reason: String, details: String? = null) : Ocpp16Error(reason, details)
-class PropertyConstraintViolation(reason: String, details: String? = null) : Ocpp16Error(reason, details)
-class OccurenceConstraintViolation(reason: String, details: String? = null) : Ocpp16Error(reason, details)
-class TypeConstraintViolation(reason: String, details: String? = null) : Ocpp16Error(reason, details)
+class NotImplemented(details: String? = null) : Ocpp16Error(
+    "Requested Action is not known by receiver",
+    details
+)
+
+class FormationViolation(details: String? = null) : Ocpp16Error(
+    "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
+    details
+)
+
+class PropertyConstraintViolation(details: String? = null) : Ocpp16Error(
+    "Payload is syntactically correct but at least one field contains an invalid value",
+    details
+)
+
+class OccurenceConstraintViolation(details: String? = null) : Ocpp16Error(
+    "Payload for Action is syntactically correct but at least one of the fields violates" +
+            " occurence constraints",
+    details
+)
+
+class TypeConstraintViolation(details: String? = null) : Ocpp16Error(
+    "Payload for Action is syntactically correct but at least one of the fields violates" +
+            " data type constraints (e.g. “somestring”: 12)",
+    details
+)
+
 class GenericError(reason: String, details: String? = null) : Ocpp16Error(reason, details)
 
 fun Ocpp16Error.toCallError(): CallError = toCallError("UNKNOWN")

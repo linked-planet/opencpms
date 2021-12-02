@@ -107,7 +107,6 @@ class WebsocketSessionTest {
         // Mocking
         val mockUUID = "d16d2312-03fe-4dd8-8d06-ea29b7ca2269"
         val mockResponse = ProtocolError(
-            "reason",
             "details"
         )
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
@@ -131,7 +130,7 @@ class WebsocketSessionTest {
                           4,
                           "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
                           "ProtocolError",
-                          "reason",
+                          "Payload for Action is incomplete",
                           {
                             "description": "details"
                           }
@@ -330,7 +329,7 @@ class WebsocketSessionTest {
                           {
                             "chargePointVendor": "ex dolor",
                             "chargePointModel": "veniam voluptate u"
-                          
+
                         ]
                     """.trimIndent()
                     outgoing.send(Frame.Text(call))
@@ -344,6 +343,176 @@ class WebsocketSessionTest {
                           "UNKNOWN",
                           "GenericError",
                           "Could not parse call, invalid [json-]format",
+                          {}
+                        ]
+                    """.trimIndent()
+                    assertEquals(expectedResponseJson, response)
+                }
+            )
+        }
+    }
+
+    @Test
+    @Suppress("MaxLineLength")
+    fun `test call with invalid empty action`() {
+        // Mocking
+        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
+
+        // Test
+        withTestApplication({ configureSockets(testContext) }) {
+            handleWebSocketConversation("/ocpp/16/test",
+                setup = {
+                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                },
+                callback = { incoming, outgoing ->
+                    val call = """
+                         [
+                          2,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "BootNotificationRequest",
+                          {}
+                        ]
+                    """.trimIndent()
+                    outgoing.send(Frame.Text(call))
+
+                    val response = (incoming.receive() as Frame.Text).readText()
+                    assertNotNull(response)
+
+                    val expectedResponseJson = """
+                        [
+                          4,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "FormationViolation",
+                          "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
+                          {}
+                        ]
+                    """.trimIndent()
+                    assertEquals(expectedResponseJson, response)
+                }
+            )
+        }
+    }
+
+    @Test
+    @Suppress("MaxLineLength")
+    fun `test call with invalid action which is missing a required attribute`() {
+        // Mocking
+        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
+
+        // Test
+        withTestApplication({ configureSockets(testContext) }) {
+            handleWebSocketConversation("/ocpp/16/test",
+                setup = {
+                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                },
+                callback = { incoming, outgoing ->
+                    val call = """
+                         [
+                          2,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "BootNotificationRequest",
+                          {
+                            "chargePointVendor": "ex dolor"
+                          }
+                        ]
+                    """.trimIndent()
+                    outgoing.send(Frame.Text(call))
+
+                    val response = (incoming.receive() as Frame.Text).readText()
+                    assertNotNull(response)
+
+                    val expectedResponseJson = """
+                        [
+                          4,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "FormationViolation",
+                          "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
+                          {}
+                        ]
+                    """.trimIndent()
+                    assertEquals(expectedResponseJson, response)
+                }
+            )
+        }
+    }
+
+    @Test
+    @Suppress("MaxLineLength")
+    fun `test call with invalid action whose attribute value is invalid`() {
+        // Mocking
+        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
+
+        // Test
+        withTestApplication({ configureSockets(testContext) }) {
+            handleWebSocketConversation("/ocpp/16/test",
+                setup = {
+                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                },
+                callback = { incoming, outgoing ->
+                    val call = """
+                         [
+                          2,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "BootNotificationRequest",
+                          {
+                            "chargePointVendor": "ex dolor"
+                          }
+                        ]
+                    """.trimIndent()
+                    outgoing.send(Frame.Text(call))
+
+                    val response = (incoming.receive() as Frame.Text).readText()
+                    assertNotNull(response)
+
+                    val expectedResponseJson = """
+                        [
+                          4,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "FormationViolation",
+                          "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
+                          {}
+                        ]
+                    """.trimIndent()
+                    assertEquals(expectedResponseJson, response)
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `test call with invalid action whose attribute value is out range`() {
+        // Mocking
+        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
+
+        // Test
+        withTestApplication({ configureSockets(testContext) }) {
+            handleWebSocketConversation("/ocpp/16/test",
+                setup = {
+                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                },
+                callback = { incoming, outgoing ->
+                    val call = """
+                         [
+                          2,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "BootNotificationRequest",
+                          {
+                            "chargePointVendor": "tooooooooooooooooooooooo looooooooooooooooooooooooooooooooooong",
+                            "chargePointModel": "veniam voluptate u"
+                          }
+                        ]
+                    """.trimIndent()
+                    outgoing.send(Frame.Text(call))
+
+                    val response = (incoming.receive() as Frame.Text).readText()
+                    assertNotNull(response)
+
+                    val expectedResponseJson = """
+                        [
+                          4,
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "PropertyConstraintViolation",
+                          "Payload is syntactically correct but at least one field contains an invalid value",
                           {}
                         ]
                     """.trimIndent()

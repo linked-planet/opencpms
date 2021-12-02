@@ -21,12 +21,15 @@ package io.opencpms.ocpp16j.endpoint.json
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.service.Ocpp16Error
 import io.opencpms.ocpp16j.endpoint.protocol.Call
 import io.opencpms.ocpp16j.endpoint.protocol.FormationViolation
 import io.opencpms.ocpp16j.endpoint.protocol.GenericError
+import io.opencpms.ocpp16j.endpoint.protocol.PropertyConstraintViolation
 import io.opencpms.ocpp16j.endpoint.util.GSON
+import io.opencpms.ocpp16j.endpoint.util.JACKSON
 
 private const val OCPP16_PACKAGE_NAME = "io.opencpms.ocpp16.protocol.message"
 
@@ -47,11 +50,20 @@ data class RawCall(
 
     fun toCall(): Either<Ocpp16Error, Call> = try {
         val actionClass = Class.forName("$OCPP16_PACKAGE_NAME.${actionName}")
-        val action = GSON.fromJson(payload, actionClass) as Ocpp16IncomingMessage
+
+        // Use special jackson parser for action as gson doesn't call init block during class initialization
+        val action = JACKSON.readValue(payload, actionClass) as Ocpp16IncomingMessage
+
         Call(uniqueId, actionName, action, messageTypeId).right()
-    } catch (_: Exception) {
-        FormationViolation(
-            "Payload for Action is syntactically incorrect or not conform the PDU structure for Action"
-        ).left()
+    } catch (e: Exception) {
+        val error = when (e) {
+            is ValueInstantiationException -> {
+                PropertyConstraintViolation()
+            }
+            else -> {
+                FormationViolation()
+            }
+        }
+        error.left()
     }
 }

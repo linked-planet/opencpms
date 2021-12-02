@@ -17,6 +17,7 @@ val gson_version: String by project
 val koin_version: String by project
 val kodein_version: String by project
 val mockk_version: String by project
+val jackson_version: String by project
 dependencies {
     implementation(project(":ocpp16-service"))
     implementation(project(":ocpp16-protocol"))
@@ -45,6 +46,9 @@ dependencies {
 
     // Kodein
     implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodein_version")
+
+    // Jackson
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version")
 
     // Mockk
     testImplementation("io.mockk:mockk:$mockk_version")
