@@ -88,10 +88,10 @@ fun Route.ocpp16AuthorizedChargePoint(callback: Route.() -> Unit): Route {
             }
 
         if (isAuthorized) {
-            log.debug("GRANTED authorization for chargePointId [$chargePointId]")
+            log.debug("GRANTED authorization [$chargePointId]")
             proceed() // Continue processing
         } else {
-            log.debug("DENIED authorization for chargePointId [$chargePointId]")
+            log.debug("DENIED authorization [$chargePointId]")
             return@intercept finish() // Abort and return 404
         }
     }
