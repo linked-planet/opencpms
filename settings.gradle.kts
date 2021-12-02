@@ -1,6 +1,6 @@
 rootProject.name = "opencpms"
 include("ocpp16-protocol")
-include("ocpp16j-endpoint-ktor")
+include("ocpp16j-endpoint")
 include("ocpp16-service")
 include("ocpp201-protocol")
 
