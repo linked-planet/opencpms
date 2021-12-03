@@ -29,7 +29,7 @@ import java.lang.reflect.Type
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 
-object OffsetDateTimeDeSerializer : JsonDeserializer<OffsetDateTime>, JsonSerializer<OffsetDateTime> {
+object OffsetDateTimeTypeAdapter : JsonDeserializer<OffsetDateTime>, JsonSerializer<OffsetDateTime> {
 
     override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): OffsetDateTime {
         require(json != null)

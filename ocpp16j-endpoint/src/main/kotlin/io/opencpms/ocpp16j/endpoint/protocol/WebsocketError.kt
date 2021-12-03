@@ -52,9 +52,7 @@ class TypeConstraintViolation(details: String? = null) : Ocpp16Error(
 
 class GenericError(reason: String, details: String? = null) : Ocpp16Error(reason, details)
 
-fun Ocpp16Error.toCallError(): CallError = toCallError("UNKNOWN")
-
-fun Ocpp16Error.toCallError(uniqueId: String): CallError {
+fun Ocpp16Error.toCallError(uniqueId: String? = null): CallError {
     val errorCode = when (this) {
         is NotSupportedError -> Ocpp16ErrorCode.NotSupported
         is io.opencpms.ocpp16.service.InternalError -> Ocpp16ErrorCode.InternalError
@@ -66,5 +64,5 @@ fun Ocpp16Error.toCallError(uniqueId: String): CallError {
         is TypeConstraintViolation -> Ocpp16ErrorCode.TypeConstraintViolation
         else -> Ocpp16ErrorCode.GenericError
     }
-    return CallError(uniqueId, errorCode, reason, details)
+    return CallError(uniqueId ?: "UNKNOWN", errorCode, reason, details)
 }

@@ -19,48 +19,68 @@
 package io.opencpms.ocpp16j.endpoint.json
 
 import arrow.core.Either
+import arrow.core.computations.either
 import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException
+import com.google.gson.JsonArray
+import com.google.gson.JsonParser
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.service.Ocpp16Error
+import io.opencpms.ocpp16j.endpoint.protocol.CALL_MESSAGE_TYPE_ID
 import io.opencpms.ocpp16j.endpoint.protocol.Call
+import io.opencpms.ocpp16j.endpoint.protocol.CallError
 import io.opencpms.ocpp16j.endpoint.protocol.FormationViolation
 import io.opencpms.ocpp16j.endpoint.protocol.GenericError
 import io.opencpms.ocpp16j.endpoint.protocol.PropertyConstraintViolation
-import io.opencpms.ocpp16j.endpoint.util.GSON
+import io.opencpms.ocpp16j.endpoint.protocol.toCallError
 import io.opencpms.ocpp16j.endpoint.util.JACKSON
 
 private const val OCPP16_PACKAGE_NAME = "io.opencpms.ocpp16.protocol.message"
 
 private const val OCPP16_CALL_CLASS_SUFFIX = "Request"
 
-/**
- * Allows parsing the payload of incoming calls.
- */
-@Suppress("TooGenericExceptionCaught")
-data class RawCall(
-    val uniqueId: String,
-    val actionName: String,
-    val messageTypeId: Int,
-    val payload: String
-) {
-    companion object {
-        fun fromJson(json: String): Either<Ocpp16Error, RawCall> = try {
-            GSON.fromJson(json, RawCall::class.java).right()
+@Suppress("MagicNumber", "TooGenericExceptionCaught")
+object IncomingCallDeserializer {
+
+    suspend fun deserialize(json: String): Either<CallError, Call> = try {
+        val jsonTree = JsonParser.parseString(json).asJsonArray
+        deserialize(jsonTree)
+    } catch (_: Exception) {
+        GenericError("Could not parse call, invalid [json-]format").toCallError().left()
+    }
+
+    suspend fun deserialize(json: JsonArray): Either<CallError, Call> = either {
+        val rawCall = parseRawCall(json).bind()
+        parseAction(rawCall).bind()
+    }
+
+    private fun parseRawCall(jsonArray: JsonArray): Either<CallError, RawCall> {
+        var uniqueId: String? = null
+        return try {
+            require(jsonArray.size() == 4)
+
+            val messageTypeId = jsonArray.get(0).asInt
+            require(messageTypeId == CALL_MESSAGE_TYPE_ID)
+
+            uniqueId = jsonArray.get(1).asString
+            val actionName = jsonArray.get(2).asString
+            val payload = jsonArray.get(3).asJsonObject
+            RawCall(messageTypeId, uniqueId, actionName, payload.toString()).right()
         } catch (_: Exception) {
-            GenericError("Could not parse call, invalid [json-]format").left()
+            GenericError("Could not parse call, invalid [json-]format").toCallError().left()
         }
     }
 
-    fun toCall(): Either<Ocpp16Error, Call> = try {
+    private fun parseAction(raw: RawCall): Either<CallError, Call> = try {
+        val actionName = raw.actionName
+
         // In a call we are working with requests only
         val actionClass = Class.forName("$OCPP16_PACKAGE_NAME.${actionName}$OCPP16_CALL_CLASS_SUFFIX")
 
         // Use special jackson parser for action as gson doesn't call init block during class initialization
-        val action = JACKSON.readValue(payload, actionClass) as Ocpp16IncomingMessage
+        val action = JACKSON.readValue(raw.payload, actionClass) as Ocpp16IncomingMessage
 
-        Call(uniqueId, actionName, action, messageTypeId).right()
+        Call(raw.uniqueId, actionName, action, raw.messageTypeId).right()
     } catch (e: Exception) {
         val error = when (e) {
             is ValueInstantiationException -> {
@@ -70,6 +90,13 @@ data class RawCall(
                 FormationViolation()
             }
         }
-        error.left()
+        error.toCallError(raw.uniqueId).left()
     }
+
+    private data class RawCall(
+        val messageTypeId: Int,
+        val uniqueId: String,
+        val actionName: String,
+        val payload: String
+    )
 }
