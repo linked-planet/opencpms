@@ -21,6 +21,7 @@ package io.opencpms.ocpp16.service
 import arrow.core.Either
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
+import io.opencpms.ocpp16.service.session.Ocpp16Session
 
 interface Ocpp16IncomingMessageService {
 

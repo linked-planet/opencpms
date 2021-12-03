@@ -18,17 +18,20 @@
  */
 package io.opencpms.ocpp16.service
 
-class Ocpp16SessionManager {
+import arrow.core.Either
+import arrow.core.right
+import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
+import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
+import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
+import io.opencpms.ocpp16.service.session.Ocpp16Session
+import java.time.OffsetDateTime
 
-    private val registeredSessions: MutableMap<String, Ocpp16Session> = mutableMapOf()
-
-    fun registerSession(session: Ocpp16Session) {
-        registeredSessions[session.chargePointId] = session
-    }
-
-    fun getSession(chargePointId: String): Ocpp16Session? = registeredSessions[chargePointId]
-
-    fun unregisterSession(chargePointId: String) {
-        registeredSessions.remove(chargePointId)
+@Suppress("MagicNumber")
+class Ocpp16IncomingMessageServiceImpl : Ocpp16IncomingMessageService {
+    override fun handleMessage(
+        session: Ocpp16Session,
+        message: Ocpp16IncomingMessage
+    ): Either<Ocpp16Error, Ocpp16OutgoingMessage> {
+        return BootNotificationResponse(BootNotificationResponse.Status.Accepted, OffsetDateTime.now(), 10L).right()
     }
 }

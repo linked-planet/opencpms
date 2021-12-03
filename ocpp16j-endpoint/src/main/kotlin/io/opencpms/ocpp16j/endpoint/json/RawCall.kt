@@ -33,6 +33,11 @@ import io.opencpms.ocpp16j.endpoint.util.JACKSON
 
 private const val OCPP16_PACKAGE_NAME = "io.opencpms.ocpp16.protocol.message"
 
+private const val OCPP16_CALL_CLASS_SUFFIX = "Request"
+
+/**
+ * Allows parsing the payload of incoming calls.
+ */
 @Suppress("TooGenericExceptionCaught")
 data class RawCall(
     val uniqueId: String,
@@ -49,7 +54,8 @@ data class RawCall(
     }
 
     fun toCall(): Either<Ocpp16Error, Call> = try {
-        val actionClass = Class.forName("$OCPP16_PACKAGE_NAME.${actionName}")
+        // In a call we are working with requests only
+        val actionClass = Class.forName("$OCPP16_PACKAGE_NAME.${actionName}$OCPP16_CALL_CLASS_SUFFIX")
 
         // Use special jackson parser for action as gson doesn't call init block during class initialization
         val action = JACKSON.readValue(payload, actionClass) as Ocpp16IncomingMessage

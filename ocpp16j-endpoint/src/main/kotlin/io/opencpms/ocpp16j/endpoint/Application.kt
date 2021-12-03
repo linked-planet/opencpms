@@ -23,7 +23,9 @@ import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.engine.sslConnector
 import io.ktor.server.jetty.Jetty
-import io.opencpms.ocpp16.service.Ocpp16SessionManager
+import io.opencpms.ocpp16.service.auth.Ocpp16AuthServiceImpl
+import io.opencpms.ocpp16.service.Ocpp16IncomingMessageServiceImpl
+import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.config.AppConfig
 import io.opencpms.ocpp16j.endpoint.websocket.configureSockets
 import java.security.KeyStore
@@ -42,11 +44,9 @@ fun main() {
 fun createContext(appConfig: AppConfig): DI = DI {
     bind { singleton { appConfig } }
 
-//            TODO: inject
-//            bind { singleton { Ocpp16AuthService() } }
+    bind { singleton { Ocpp16AuthServiceImpl() } }
     bind { singleton { Ocpp16SessionManager() } }
-//            TODO: inject
-//            bind { singleton { Ocpp16IncomingMessageService() } }
+    bind { singleton { Ocpp16IncomingMessageServiceImpl() } }
 }
 
 

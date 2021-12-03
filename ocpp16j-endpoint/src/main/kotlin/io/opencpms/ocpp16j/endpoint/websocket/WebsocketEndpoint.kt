@@ -29,7 +29,7 @@ import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.service.Ocpp16IncomingMessageService
-import io.opencpms.ocpp16.service.Ocpp16Session
+import io.opencpms.ocpp16.service.session.Ocpp16Session
 import java.time.Duration
 import org.kodein.di.DI
 import org.kodein.di.instance

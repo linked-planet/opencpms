@@ -30,8 +30,8 @@ import io.ktor.websocket.application
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
 import io.opencpms.ocpp16.service.Ocpp16Error
-import io.opencpms.ocpp16.service.Ocpp16Session
-import io.opencpms.ocpp16.service.Ocpp16SessionManager
+import io.opencpms.ocpp16.service.session.Ocpp16Session
+import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.json.RawCall
 import io.opencpms.ocpp16j.endpoint.protocol.CallError
 import io.opencpms.ocpp16j.endpoint.protocol.CallResult

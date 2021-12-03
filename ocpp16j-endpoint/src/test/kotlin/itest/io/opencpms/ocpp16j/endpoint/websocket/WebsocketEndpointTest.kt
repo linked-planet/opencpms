@@ -27,7 +27,7 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
-import io.opencpms.ocpp16.service.Ocpp16AuthService
+import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
 import io.opencpms.ocpp16j.endpoint.config.AppConfig
 import io.opencpms.ocpp16j.endpoint.websocket.configureSockets
 import org.junit.After

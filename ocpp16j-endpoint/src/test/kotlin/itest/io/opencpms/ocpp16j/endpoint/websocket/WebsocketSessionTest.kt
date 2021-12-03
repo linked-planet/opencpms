@@ -28,9 +28,9 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
-import io.opencpms.ocpp16.service.Ocpp16AuthService
+import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
 import io.opencpms.ocpp16.service.Ocpp16IncomingMessageService
-import io.opencpms.ocpp16.service.Ocpp16SessionManager
+import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
 import io.opencpms.ocpp16.service.ProtocolError
 import io.opencpms.ocpp16j.endpoint.config.AppConfig
 import io.opencpms.ocpp16j.endpoint.protocol.CALL_MESSAGE_TYPE_ID
@@ -159,7 +159,7 @@ class WebsocketSessionTest {
                     val call = """
                          [
                           "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
-                          "BootNotificationRequest",
+                          "BootNotification",
                           {
                             "chargePointVendor": "ex dolor",
                             "chargePointModel": "veniam voluptate u"
@@ -201,7 +201,7 @@ class WebsocketSessionTest {
                     val call = """
                          [
                           2,
-                          "BootNotificationRequest",
+                          "BootNotification",
                           {
                             "chargePointVendor": "ex dolor",
                             "chargePointModel": "veniam voluptate u"
@@ -286,7 +286,7 @@ class WebsocketSessionTest {
                          [
                           2,
                           "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
-                          "BootNotificationRequest"
+                          "BootNotification"
                         ]
                     """.trimIndent()
                     outgoing.send(Frame.Text(call))
@@ -325,7 +325,7 @@ class WebsocketSessionTest {
                          [
                           2,
                           "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
-                          "BootNotificationRequest",
+                          "BootNotification",
                           {
                             "chargePointVendor": "ex dolor",
                             "chargePointModel": "veniam voluptate u"
@@ -369,7 +369,7 @@ class WebsocketSessionTest {
                          [
                           2,
                           "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
-                          "BootNotificationRequest",
+                          "BootNotification",
                           {}
                         ]
                     """.trimIndent()
@@ -410,7 +410,7 @@ class WebsocketSessionTest {
                          [
                           2,
                           "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
-                          "BootNotificationRequest",
+                          "BootNotification",
                           {
                             "chargePointVendor": "ex dolor"
                           }
@@ -453,7 +453,7 @@ class WebsocketSessionTest {
                          [
                           2,
                           "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
-                          "BootNotificationRequest",
+                          "BootNotification",
                           {
                             "chargePointVendor": "ex dolor"
                           }
@@ -495,7 +495,7 @@ class WebsocketSessionTest {
                          [
                           2,
                           "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
-                          "BootNotificationRequest",
+                          "BootNotification",
                           {
                             "chargePointVendor": "tooooooooooooooooooooooo looooooooooooooooooooooooooooooooooong",
                             "chargePointModel": "veniam voluptate u"
@@ -524,7 +524,7 @@ class WebsocketSessionTest {
 
     private fun createTestCall(uniqueId: String): String {
         val actionPath = "src/test/resources/BootNotificationRequest.json"
-        val actionName = "BootNotificationRequest"
+        val actionName = "BootNotification"
         val actionJsonStr = readFileAsText(actionPath)
         return "[$CALL_MESSAGE_TYPE_ID,\"$uniqueId\",\"$actionName\", $actionJsonStr]"
     }

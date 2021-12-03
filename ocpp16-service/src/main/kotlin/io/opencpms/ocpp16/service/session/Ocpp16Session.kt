@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16.service
+package io.opencpms.ocpp16.service.session
 
 interface Ocpp16Session {
 
