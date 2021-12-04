@@ -32,11 +32,12 @@ import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
 import io.opencpms.ocpp16.service.Ocpp16Error
 import io.opencpms.ocpp16.service.session.Ocpp16Session
 import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
-import io.opencpms.ocpp16j.endpoint.json.IncomingCallDeserializer
+import io.opencpms.ocpp16j.endpoint.json.CallErrorTypeAdapter
+import io.opencpms.ocpp16j.endpoint.json.CallResultTypeAdapter
+import io.opencpms.ocpp16j.endpoint.json.CallTypeAdapter
 import io.opencpms.ocpp16j.endpoint.protocol.CallError
-import io.opencpms.ocpp16j.endpoint.protocol.CallResult
+import io.opencpms.ocpp16j.endpoint.protocol.OutgoingCallResult
 import io.opencpms.ocpp16j.endpoint.protocol.toCallError
-import io.opencpms.ocpp16j.endpoint.util.GSON
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.runBlocking
 import org.kodein.di.instance
@@ -92,19 +93,25 @@ class WebsocketSession(
 
                     log.trace("Received message '$text' [$chargePointId]")
 
-                    // TODO: improve
-                    val that = this
-                    val callResponseEither: Either<CallError, CallResult> = either {
-                        val call = IncomingCallDeserializer.deserialize(text).bind()
+                    val callResponseEither = either<CallError, OutgoingCallResult> {
+                        val call = CallTypeAdapter.deserialize(text).bind()
                         val uniqueId = call.uniqueId
                         val incomingMessage = call.payload
 
-                        handler(that, incomingMessage)
-                            .map { CallResult(uniqueId, it) }
+                        handler(this@WebsocketSession, incomingMessage)
+                            .map { OutgoingCallResult(uniqueId, it) }
                             .mapLeft { it.toCallError(uniqueId) }.bind()
                     }
+                    val serializedCallResponse = callResponseEither.fold(
+                        ifLeft = {
+                            CallErrorTypeAdapter.serialize(it)
+                        },
+                        ifRight = {
+                            CallResultTypeAdapter.serialize(it)
+                        }
+                    )
 
-                    session.outgoing.send(Frame.Text(GSON.toJson(callResponseEither.fold({ it }, { it }))))
+                    session.outgoing.send(Frame.Text(serializedCallResponse))
                 }
                 else -> {
                     log.error("Dropping unknown message type [$chargePointId]")

@@ -20,16 +20,14 @@ package io.opencpms.ocpp16j.endpoint.util
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import io.opencpms.ocpp16j.endpoint.json.CallErrorSerializer
-import io.opencpms.ocpp16j.endpoint.json.CallResultSerializer
+import io.opencpms.ocpp16j.endpoint.json.CallErrorTypeAdapter
+import io.opencpms.ocpp16j.endpoint.json.CallResultTypeAdapter
 import io.opencpms.ocpp16j.endpoint.json.OffsetDateTimeTypeAdapter
 import io.opencpms.ocpp16j.endpoint.protocol.CallError
-import io.opencpms.ocpp16j.endpoint.protocol.CallResult
+import io.opencpms.ocpp16j.endpoint.protocol.OutgoingCallResult
 import java.time.OffsetDateTime
 
 val GSON: Gson = GsonBuilder()
     .registerTypeAdapter(OffsetDateTime::class.java, OffsetDateTimeTypeAdapter)
-    .registerTypeAdapter(CallResult::class.java, CallResultSerializer)
-    .registerTypeAdapter(CallError::class.java, CallErrorSerializer)
     .setPrettyPrinting()
     .create()

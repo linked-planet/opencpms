@@ -18,25 +18,8 @@
  */
 package io.opencpms.ocpp16j.endpoint.json
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonElement
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
-import io.opencpms.ocpp16j.endpoint.protocol.CallResult
-import io.opencpms.ocpp16j.endpoint.util.GSON
-import java.lang.reflect.Type
+const val OCPP16_PACKAGE_NAME = "io.opencpms.ocpp16.protocol.message"
 
-object CallResultSerializer : JsonSerializer<CallResult> {
+const val OCPP16_CALL_CLASS_SUFFIX = "Request"
 
-    override fun serialize(src: CallResult?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
-        require(src != null)
-
-        val payload = GSON.toJsonTree(src.payload)
-
-        val jsonArray = JsonArray()
-        jsonArray.add(src.messageTypeId)
-        jsonArray.add(src.uniqueId)
-        jsonArray.add(payload)
-        return jsonArray
-    }
-}
+const val OCPP16_CALL_RESULT_CLASS_SUFFIX = "Response"

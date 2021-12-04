@@ -62,7 +62,10 @@ fun Ocpp16Error.toCallError(uniqueId: String? = null): CallError {
         is PropertyConstraintViolation -> Ocpp16ErrorCode.PropertyConstraintViolation
         is OccurenceConstraintViolation -> Ocpp16ErrorCode.OccurenceConstraintViolation
         is TypeConstraintViolation -> Ocpp16ErrorCode.TypeConstraintViolation
-        else -> Ocpp16ErrorCode.GenericError
+        is GenericError -> Ocpp16ErrorCode.GenericError
+        else -> {
+            Ocpp16ErrorCode.GenericError
+        }
     }
     return CallError(uniqueId ?: "UNKNOWN", errorCode, reason, details)
 }

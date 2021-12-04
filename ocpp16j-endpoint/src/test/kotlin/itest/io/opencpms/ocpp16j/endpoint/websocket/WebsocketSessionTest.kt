@@ -176,7 +176,7 @@ class WebsocketSessionTest {
                           4,
                           "UNKNOWN",
                           "GenericError",
-                          "Could not parse call, invalid [json-]format",
+                          "Could not parse Call, invalid [json-]format",
                           {}
                         ]
                     """.trimIndent()
@@ -218,7 +218,7 @@ class WebsocketSessionTest {
                           4,
                           "UNKNOWN",
                           "GenericError",
-                          "Could not parse call, invalid [json-]format",
+                          "Could not parse Call, invalid [json-]format",
                           {}
                         ]
                     """.trimIndent()
@@ -260,7 +260,7 @@ class WebsocketSessionTest {
                           4,
                           "UNKNOWN",
                           "GenericError",
-                          "Could not parse call, invalid [json-]format",
+                          "Could not parse Call, invalid [json-]format",
                           {}
                         ]
                     """.trimIndent()
@@ -299,7 +299,7 @@ class WebsocketSessionTest {
                           4,
                           "UNKNOWN",
                           "GenericError",
-                          "Could not parse call, invalid [json-]format",
+                          "Could not parse Call, invalid [json-]format",
                           {}
                         ]
                     """.trimIndent()
@@ -342,7 +342,7 @@ class WebsocketSessionTest {
                           4,
                           "UNKNOWN",
                           "GenericError",
-                          "Could not parse call, invalid [json-]format",
+                          "Could not parse Call, invalid [json-]format",
                           {}
                         ]
                     """.trimIndent()

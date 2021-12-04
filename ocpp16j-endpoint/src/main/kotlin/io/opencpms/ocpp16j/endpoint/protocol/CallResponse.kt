@@ -21,19 +21,47 @@ package io.opencpms.ocpp16j.endpoint.protocol
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
 
-const val CALL_MESSAGE_TYPE_ID = 2
+// ----- CallResponse
+interface OutgoingCallResponse
+interface IncomingCallResponse
 
-data class IncomingCall(
+// ----- CallResult
+const val CALL_RESULT_MESSAGE_TYPE_ID = 3
+
+data class OutgoingCallResult(
     val uniqueId: String,
-    val actionName: String,
+    val payload: Ocpp16OutgoingMessage
+) : OutgoingCallResponse {
+    val messageTypeId = CALL_RESULT_MESSAGE_TYPE_ID
+}
+
+data class IncomingCallResult(
+    val uniqueId: String,
     val payload: Ocpp16IncomingMessage,
     val messageTypeId: Int
-)
+) : IncomingCallResponse
 
-data class OutgoingCall(
+const val CALL_ERROR_MESSAGE_TYPE_ID = 4
+
+// ----- CallError
+data class CallError(
     val uniqueId: String,
-    val actionName: String,
-    val payload: Ocpp16OutgoingMessage,
-) {
-    val messageTypeId = CALL_RESULT_MESSAGE_TYPE_ID
+    val errorCode: Ocpp16ErrorCode,
+    val errorDescription: String = "",
+    val errorDetails: String?
+) : OutgoingCallResponse, IncomingCallResponse {
+    val messageTypeId: Int = CALL_ERROR_MESSAGE_TYPE_ID
+}
+
+enum class Ocpp16ErrorCode {
+    NotImplemented,
+    NotSupported,
+    InternalError,
+    ProtocolError,
+    SecurityError,
+    FormationViolation,
+    PropertyConstraintViolation,
+    OccurenceConstraintViolation,
+    TypeConstraintViolation,
+    GenericError
 }
