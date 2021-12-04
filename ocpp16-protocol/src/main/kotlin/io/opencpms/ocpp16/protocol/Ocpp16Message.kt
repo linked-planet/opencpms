@@ -18,8 +18,18 @@
  */
 package io.opencpms.ocpp16.protocol
 
+/**
+ * Marks every OCPP1.6 message which is sent over the wire, independent of the direction.
+ * So the message might be sent from Central System (= CS) to Charge Point (= CP) or vice versa.
+ */
 interface Ocpp16Message
 
+/**
+ * Marks an OCPP1.6 message which is sent from CS -> CP (= outgoing).
+ */
 interface Ocpp16OutgoingMessage : Ocpp16Message
 
+/**
+ * Marks an OCPP1.6 message which is sent from CP -> CS (= incoming).
+ */
 interface Ocpp16IncomingMessage : Ocpp16Message
