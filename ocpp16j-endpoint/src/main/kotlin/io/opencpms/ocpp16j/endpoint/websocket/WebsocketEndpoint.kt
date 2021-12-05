@@ -27,13 +27,8 @@ import io.ktor.http.cio.websocket.timeout
 import io.ktor.routing.routing
 import io.ktor.websocket.WebSockets
 import io.ktor.websocket.webSocket
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiver
-import io.opencpms.ocpp16.service.session.Ocpp16Session
 import java.time.Duration
 import org.kodein.di.DI
-import org.kodein.di.instance
-import org.kodein.di.ktor.closestDI
 import org.kodein.di.ktor.di
 
 private const val OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE = "ocpp1.6"
@@ -59,10 +54,7 @@ fun Application.configureSockets(context: DI) {
         ocpp16AuthorizedChargePoint {
             webSocket("/ocpp/16/{chargePointId}", OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE) {
                 ocpp16Session {
-                    incomingOcpp16Message { session: Ocpp16Session, message: Ocpp16IncomingMessage ->
-                        val incomingMessageService by closestDI().instance<Ocpp16MessageReceiver>()
-                        incomingMessageService.handleMessage(session, message)
-                    }
+                    handleIncomingMessages()
                 }
             }
         }

@@ -31,6 +31,7 @@ import io.ktor.websocket.application
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
 import io.opencpms.ocpp16.service.Ocpp16Error
+import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiver
 import io.opencpms.ocpp16.service.session.Ocpp16Session
 import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.json.CallErrorTypeAdapter
@@ -98,15 +99,15 @@ class WebsocketSession(
         private val log = LoggerFactory.getLogger(WebsocketSession::class.java)
     }
 
+    private val messageReceiver by closestDI { session.application }.instance<Ocpp16MessageReceiver>()
+
     private val outgoingMessagesLock = Mutex()
 
     // TODO: periodically remove zombies!?
     private val pendingIncomingResponses =
         ConcurrentHashMap<String, CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingMessage>>>()
 
-    suspend fun incomingOcpp16Message(
-        handler: (Ocpp16Session, Ocpp16IncomingMessage) -> Either<Ocpp16Error, Ocpp16OutgoingMessage>
-    ) {
+    suspend fun handleIncomingMessages() {
         for (frame in session.incoming) {
             when (frame) {
                 is Frame.Text -> {
@@ -125,18 +126,7 @@ class WebsocketSession(
                                     is IncomingCall -> {
                                         log.debug("Handling Call [$chargePointId/${uniqueId}]")
 
-                                        val callResponse = handler(this@WebsocketSession, incomingMessage.payload)
-                                            .fold(
-                                                {
-                                                    CallErrorTypeAdapter.serialize(it.toCallError())
-                                                },
-                                                {
-                                                    val response = OutgoingCallResult(incomingMessage.uniqueId, it)
-                                                    CallResultTypeAdapter.serialize(response)
-                                                }
-                                            )
-
-                                        sendText(callResponse)
+                                        handleIncomingCall(incomingMessage)
                                     }
                                     is IncomingCallResult -> {
                                         log.debug("Handling CallResult [$chargePointId/${uniqueId}]")
@@ -167,6 +157,21 @@ class WebsocketSession(
                 }
             }
         }
+    }
+
+    private suspend fun handleIncomingCall(message: IncomingCall) {
+        val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
+            .fold(
+                {
+                    CallErrorTypeAdapter.serialize(it.toCallError())
+                },
+                {
+                    val response = OutgoingCallResult(message.uniqueId, it)
+                    CallResultTypeAdapter.serialize(response)
+                }
+            )
+
+        sendText(callResponse)
     }
 
     private fun handleIncomingCallResponse(uniqueId: String, result: Either<Ocpp16Error, Ocpp16IncomingMessage>) {
