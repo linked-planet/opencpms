@@ -16,24 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16j.endpoint.protocol
+package io.opencpms.ocpp16.service.receiver
 
+import arrow.core.Either
+import arrow.core.right
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
+import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
+import io.opencpms.ocpp16.service.Ocpp16Error
+import io.opencpms.ocpp16.service.session.Ocpp16Session
+import java.time.OffsetDateTime
 
-const val CALL_MESSAGE_TYPE_ID = 2
+@Suppress("MagicNumber")
+class Ocpp16MessageReceiverImpl : Ocpp16MessageReceiver {
 
-data class IncomingCall(
-    override val uniqueId: String,
-    val actionName: String,
-    val payload: Ocpp16IncomingMessage,
-    val messageTypeId: Int
-) : WebsocketMessage
-
-data class OutgoingCall(
-    override val uniqueId: String,
-    val actionName: String,
-    val payload: Ocpp16OutgoingMessage,
-) : WebsocketMessage {
-    val messageTypeId = CALL_RESULT_MESSAGE_TYPE_ID
+    override fun handleMessage(
+        session: Ocpp16Session,
+        message: Ocpp16IncomingMessage
+    ): Either<Ocpp16Error, Ocpp16OutgoingMessage> {
+        return BootNotificationResponse(BootNotificationResponse.Status.Accepted, OffsetDateTime.now(), 10L).right()
+    }
 }

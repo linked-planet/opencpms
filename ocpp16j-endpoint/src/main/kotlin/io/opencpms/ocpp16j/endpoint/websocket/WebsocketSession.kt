@@ -19,6 +19,8 @@
 package io.opencpms.ocpp16j.endpoint.websocket
 
 import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.CloseReason
 import io.ktor.http.cio.websocket.Frame
@@ -33,15 +35,26 @@ import io.opencpms.ocpp16.service.session.Ocpp16Session
 import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.json.CallErrorTypeAdapter
 import io.opencpms.ocpp16j.endpoint.json.CallResultTypeAdapter
+import io.opencpms.ocpp16j.endpoint.json.CallTypeAdapter
 import io.opencpms.ocpp16j.endpoint.json.WebsocketMessageDeserializer
 import io.opencpms.ocpp16j.endpoint.protocol.CallError
+import io.opencpms.ocpp16j.endpoint.protocol.GenericError
 import io.opencpms.ocpp16j.endpoint.protocol.IncomingCall
 import io.opencpms.ocpp16j.endpoint.protocol.IncomingCallResult
-import io.opencpms.ocpp16j.endpoint.protocol.NotImplemented
+import io.opencpms.ocpp16j.endpoint.protocol.OutgoingCall
 import io.opencpms.ocpp16j.endpoint.protocol.OutgoingCallResult
 import io.opencpms.ocpp16j.endpoint.protocol.toCallError
+import io.opencpms.ocpp16j.endpoint.protocol.toOcpp16Error
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withContext
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.slf4j.LoggerFactory
@@ -85,7 +98,13 @@ class WebsocketSession(
         private val log = LoggerFactory.getLogger(WebsocketSession::class.java)
     }
 
-    suspend fun ocpp16Call(
+    private val outgoingMessagesLock = Mutex()
+
+    // TODO: periodically remove zombies!?
+    private val pendingIncomingResponses =
+        ConcurrentHashMap<String, CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingMessage>>>()
+
+    suspend fun incomingOcpp16Message(
         handler: (Ocpp16Session, Ocpp16IncomingMessage) -> Either<Ocpp16Error, Ocpp16OutgoingMessage>
     ) {
         for (frame in session.incoming) {
@@ -95,39 +114,52 @@ class WebsocketSession(
 
                     log.trace("Received message '$text' [$chargePointId]")
 
-                    val incomingMessage = WebsocketMessageDeserializer.deserialize(text) { it }
+                    WebsocketMessageDeserializer.deserialize(text) { it }
                         .fold(
-                            { it.toCallError() },
-                            { it }
-                        )
+                            {
+                                sendText(CallErrorTypeAdapter.serialize(it.toCallError()))
+                            },
+                            { incomingMessage ->
+                                val uniqueId = incomingMessage.uniqueId
+                                when (incomingMessage) {
+                                    is IncomingCall -> {
+                                        log.debug("Handling Call [$chargePointId/${uniqueId}]")
 
-                    val serializedOutgoingMessage = when (incomingMessage) {
-                        is IncomingCall -> {
-                            handler(this@WebsocketSession, incomingMessage.payload)
-                                .fold(
-                                    {
-                                        CallErrorTypeAdapter.serialize(it.toCallError())
-                                    },
-                                    {
-                                        val response = OutgoingCallResult(incomingMessage.uniqueId, it)
-                                        CallResultTypeAdapter.serialize(response)
+                                        val callResponse = handler(this@WebsocketSession, incomingMessage.payload)
+                                            .fold(
+                                                {
+                                                    CallErrorTypeAdapter.serialize(it.toCallError())
+                                                },
+                                                {
+                                                    val response = OutgoingCallResult(incomingMessage.uniqueId, it)
+                                                    CallResultTypeAdapter.serialize(response)
+                                                }
+                                            )
+
+                                        sendText(callResponse)
                                     }
-                                )
-                        }
-                        is IncomingCallResult -> {
-                            val error = NotImplemented().toCallError()
-                            CallErrorTypeAdapter.serialize(error)
-                        }
-                        is CallError -> {
-                            CallErrorTypeAdapter.serialize(incomingMessage)
-                        }
-                        else -> {
-                            val error = NotImplemented().toCallError()
-                            CallErrorTypeAdapter.serialize(error)
-                        }
-                    }
+                                    is IncomingCallResult -> {
+                                        log.debug("Handling CallResult [$chargePointId/${uniqueId}]")
 
-                    session.outgoing.send(Frame.Text(serializedOutgoingMessage))
+                                        handleIncomingCallResponse(
+                                            uniqueId,
+                                            incomingMessage.payload.right()
+                                        )
+                                    }
+                                    is CallError -> {
+                                        log.debug("Handling CallError [$chargePointId/${uniqueId}]")
+
+                                        handleIncomingCallResponse(
+                                            uniqueId,
+                                            incomingMessage.toOcpp16Error().left()
+                                        )
+                                    }
+                                    else -> {
+                                        TODO()
+                                    }
+                                }
+                            }
+                        )
                 }
                 else -> {
                     log.error("Dropping unknown message type [$chargePointId]")
@@ -135,5 +167,46 @@ class WebsocketSession(
                 }
             }
         }
+    }
+
+    private fun handleIncomingCallResponse(uniqueId: String, result: Either<Ocpp16Error, Ocpp16IncomingMessage>) {
+        val promise = pendingIncomingResponses[uniqueId]
+        promise?.let {
+            outgoingMessagesLock.unlock()
+            pendingIncomingResponses.remove(uniqueId)
+            it.complete(result)
+        }
+    }
+
+    suspend fun sendOutgoingMessage(message: Ocpp16OutgoingMessage):
+            Deferred<Either<Ocpp16Error, Ocpp16IncomingMessage>> {
+        val promise: CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingMessage>> = CompletableDeferred()
+
+        // send message in background and return instantly
+        val uniqueId = UUID.randomUUID().toString()
+        withContext(Dispatchers.IO) {
+            async {
+                outgoingMessagesLock.lock()
+                val actionName = message.javaClass.name.removeSuffix("Request") // TODO: extract
+                val call = OutgoingCall(uniqueId, actionName, message)
+                val serializedCall = CallTypeAdapter.serialize(call)
+                sendText(serializedCall)
+            }
+        }.invokeOnCompletion {
+            it
+                ?.let {
+                    outgoingMessagesLock.unlock()
+                    promise.complete(GenericError("Could not send message to client").left())
+                }
+                ?: let {
+                    pendingIncomingResponses.put(uniqueId, promise)
+                }
+        }
+
+        return promise
+    }
+
+    private suspend fun sendText(text: String) {
+        session.outgoing.send(Frame.Text(text))
     }
 }

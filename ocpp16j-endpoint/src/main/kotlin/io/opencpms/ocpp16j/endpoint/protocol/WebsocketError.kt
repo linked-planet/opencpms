@@ -18,10 +18,7 @@
  */
 package io.opencpms.ocpp16j.endpoint.protocol
 
-import io.opencpms.ocpp16.service.NotSupportedError
 import io.opencpms.ocpp16.service.Ocpp16Error
-import io.opencpms.ocpp16.service.ProtocolError
-import io.opencpms.ocpp16.service.SecurityError
 import io.opencpms.ocpp16.service.UNKNOWN_UNIQUE_ID
 
 class NotImplemented(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
@@ -58,21 +55,3 @@ class TypeConstraintViolation(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: St
 
 class GenericError(reason: String, uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) :
     Ocpp16Error(uniqueId, reason, details)
-
-fun Ocpp16Error.toCallError(): CallError {
-    val errorCode = when (this) {
-        is NotSupportedError -> Ocpp16ErrorCode.NotSupported
-        is io.opencpms.ocpp16.service.InternalError -> Ocpp16ErrorCode.InternalError
-        is ProtocolError -> Ocpp16ErrorCode.ProtocolError
-        is SecurityError -> Ocpp16ErrorCode.SecurityError
-        is FormationViolation -> Ocpp16ErrorCode.FormationViolation
-        is PropertyConstraintViolation -> Ocpp16ErrorCode.PropertyConstraintViolation
-        is OccurenceConstraintViolation -> Ocpp16ErrorCode.OccurenceConstraintViolation
-        is TypeConstraintViolation -> Ocpp16ErrorCode.TypeConstraintViolation
-        is GenericError -> Ocpp16ErrorCode.GenericError
-        else -> {
-            Ocpp16ErrorCode.GenericError
-        }
-    }
-    return CallError(uniqueId, errorCode, reason, details)
-}

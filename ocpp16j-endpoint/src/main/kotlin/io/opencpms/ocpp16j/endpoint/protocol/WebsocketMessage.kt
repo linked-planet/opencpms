@@ -21,4 +21,6 @@ package io.opencpms.ocpp16j.endpoint.protocol
 /**
  * Marks any type of message which is sent in OCPP1.6J.
  */
-interface WebsocketMessage
+interface WebsocketMessage {
+    val uniqueId: String
+}

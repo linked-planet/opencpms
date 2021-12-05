@@ -28,7 +28,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
-import io.opencpms.ocpp16.service.Ocpp16IncomingMessageService
+import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiver
 import io.opencpms.ocpp16.service.ProtocolError
 import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
 import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
@@ -49,7 +49,7 @@ class WebsocketSessionTest {
 
     private val appConfig = spyk<AppConfig>()
     private val authService = mockk<Ocpp16AuthService>()
-    private val incomingMessageService = mockk<Ocpp16IncomingMessageService>()
+    private val incomingMessageService = mockk<Ocpp16MessageReceiver>()
 
     private val testContext = DI {
         bind { singleton { appConfig } }

@@ -16,22 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16.service
+package io.opencpms.ocpp16.service.sender
 
 import arrow.core.Either
-import arrow.core.right
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
-import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
+import io.opencpms.ocpp16.service.Ocpp16Error
 import io.opencpms.ocpp16.service.session.Ocpp16Session
-import java.time.OffsetDateTime
 
 @Suppress("MagicNumber")
-class Ocpp16IncomingMessageServiceImpl : Ocpp16IncomingMessageService {
-    override fun handleMessage(
+class Ocpp16MessageSenderImpl : Ocpp16MessageSender {
+
+    val transactionManager = null
+
+    override fun sendMessage(
         session: Ocpp16Session,
-        message: Ocpp16IncomingMessage
-    ): Either<Ocpp16Error, Ocpp16OutgoingMessage> {
-        return BootNotificationResponse(BootNotificationResponse.Status.Accepted, OffsetDateTime.now(), 10L).right()
+        message: Ocpp16OutgoingMessage
+    ): Either<Ocpp16Error, Ocpp16IncomingMessage> {
+        TODO()
     }
 }
