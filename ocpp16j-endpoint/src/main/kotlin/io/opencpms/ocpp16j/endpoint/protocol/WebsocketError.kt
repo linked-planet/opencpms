@@ -22,37 +22,44 @@ import io.opencpms.ocpp16.service.NotSupportedError
 import io.opencpms.ocpp16.service.Ocpp16Error
 import io.opencpms.ocpp16.service.ProtocolError
 import io.opencpms.ocpp16.service.SecurityError
+import io.opencpms.ocpp16.service.UNKNOWN_UNIQUE_ID
 
-class NotImplemented(details: String? = null) : Ocpp16Error(
+class NotImplemented(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
     "Requested Action is not known by receiver",
     details
 )
 
-class FormationViolation(details: String? = null) : Ocpp16Error(
+class FormationViolation(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
     "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
     details
 )
 
-class PropertyConstraintViolation(details: String? = null) : Ocpp16Error(
+class PropertyConstraintViolation(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
     "Payload is syntactically correct but at least one field contains an invalid value",
     details
 )
 
-class OccurenceConstraintViolation(details: String? = null) : Ocpp16Error(
+class OccurenceConstraintViolation(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
     "Payload for Action is syntactically correct but at least one of the fields violates" +
             " occurence constraints",
     details
 )
 
-class TypeConstraintViolation(details: String? = null) : Ocpp16Error(
+class TypeConstraintViolation(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
     "Payload for Action is syntactically correct but at least one of the fields violates" +
             " data type constraints (e.g. “somestring”: 12)",
     details
 )
 
-class GenericError(reason: String, details: String? = null) : Ocpp16Error(reason, details)
+class GenericError(reason: String, uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) :
+    Ocpp16Error(uniqueId, reason, details)
 
-fun Ocpp16Error.toCallError(uniqueId: String? = null): CallError {
+fun Ocpp16Error.toCallError(): CallError {
     val errorCode = when (this) {
         is NotSupportedError -> Ocpp16ErrorCode.NotSupported
         is io.opencpms.ocpp16.service.InternalError -> Ocpp16ErrorCode.InternalError
@@ -67,5 +74,5 @@ fun Ocpp16Error.toCallError(uniqueId: String? = null): CallError {
             Ocpp16ErrorCode.GenericError
         }
     }
-    return CallError(uniqueId ?: "UNKNOWN", errorCode, reason, details)
+    return CallError(uniqueId, errorCode, reason, details)
 }

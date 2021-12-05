@@ -24,20 +24,17 @@ import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException
 import com.google.gson.JsonArray
-import com.google.gson.JsonParser
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
+import io.opencpms.ocpp16.service.Ocpp16Error
+import io.opencpms.ocpp16.service.UNKNOWN_UNIQUE_ID
 import io.opencpms.ocpp16j.endpoint.protocol.CALL_MESSAGE_TYPE_ID
-import io.opencpms.ocpp16j.endpoint.protocol.CallError
 import io.opencpms.ocpp16j.endpoint.protocol.FormationViolation
 import io.opencpms.ocpp16j.endpoint.protocol.GenericError
 import io.opencpms.ocpp16j.endpoint.protocol.IncomingCall
 import io.opencpms.ocpp16j.endpoint.protocol.OutgoingCall
 import io.opencpms.ocpp16j.endpoint.protocol.PropertyConstraintViolation
-import io.opencpms.ocpp16j.endpoint.protocol.toCallError
 import io.opencpms.ocpp16j.endpoint.util.GSON
 import io.opencpms.ocpp16j.endpoint.util.JACKSON
-
-private const val CALL_ENTRIES = 4
 
 private const val MESSAGE_TYPE_ID_INDEX = 0
 private const val UNIQUE_ID_INDEX = 1
@@ -59,19 +56,12 @@ object CallTypeAdapter {
         return GSON.toJson(jsonArray)
     }
 
-    suspend fun deserialize(json: String): Either<CallError, IncomingCall> = try {
-        val jsonTree = JsonParser.parseString(json).asJsonArray
-        deserialize(jsonTree)
-    } catch (_: Exception) {
-        GenericError("Could not parse Call, invalid [json-]format").toCallError().left()
-    }
-
-    private suspend fun deserialize(json: JsonArray): Either<CallError, IncomingCall> = either {
+    suspend fun deserialize(json: JsonArray): Either<Ocpp16Error, IncomingCall> = either {
         val rawCall = parseRawCall(json).bind()
         parseAction(rawCall).bind()
     }
 
-    private fun parseRawCall(jsonArray: JsonArray): Either<CallError, RawIncomingCall> {
+    private fun parseRawCall(jsonArray: JsonArray): Either<Ocpp16Error, RawIncomingCall> {
         var uniqueId: String? = null
         return try {
             require(jsonArray.size() == CALL_ENTRIES)
@@ -87,11 +77,11 @@ object CallTypeAdapter {
 
             RawIncomingCall(messageTypeId, uniqueId, actionName, payload.toString()).right()
         } catch (_: Exception) {
-            GenericError("Could not parse Call, invalid [json-]format").toCallError(uniqueId).left()
+            GenericError("Could not parse Call, invalid [json-]format", uniqueId).left()
         }
     }
 
-    private fun parseAction(raw: RawIncomingCall): Either<CallError, IncomingCall> = try {
+    private fun parseAction(raw: RawIncomingCall): Either<Ocpp16Error, IncomingCall> = try {
         val actionName = raw.actionName
 
         // In a call we are working with requests only
@@ -104,13 +94,13 @@ object CallTypeAdapter {
     } catch (e: Exception) {
         val error = when (e) {
             is ValueInstantiationException -> {
-                PropertyConstraintViolation()
+                PropertyConstraintViolation(raw.uniqueId)
             }
             else -> {
-                FormationViolation()
+                FormationViolation(raw.uniqueId)
             }
         }
-        error.toCallError(raw.uniqueId).left()
+        error.left()
     }
 
     private data class RawIncomingCall(

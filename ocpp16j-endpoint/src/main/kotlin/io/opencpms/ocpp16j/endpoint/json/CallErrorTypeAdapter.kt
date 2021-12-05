@@ -23,15 +23,12 @@ import arrow.core.left
 import arrow.core.right
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import io.opencpms.ocpp16.service.Ocpp16Error
 import io.opencpms.ocpp16j.endpoint.protocol.CALL_ERROR_MESSAGE_TYPE_ID
 import io.opencpms.ocpp16j.endpoint.protocol.CallError
 import io.opencpms.ocpp16j.endpoint.protocol.GenericError
 import io.opencpms.ocpp16j.endpoint.protocol.Ocpp16ErrorCode
 import io.opencpms.ocpp16j.endpoint.util.GSON
-
-private const val CALL_ERROR_ENTRIES = 5
 
 private const val MESSAGE_TYPE_ID_INDEX = 0
 private const val UNIQUE_ID_INDEX = 1
@@ -55,21 +52,15 @@ object CallErrorTypeAdapter {
         return GSON.toJson(jsonArray)
     }
 
-    suspend fun deserialize(json: String): Either<Ocpp16Error, CallError> = try {
-        val jsonTree = JsonParser.parseString(json).asJsonArray
-        parseCallError(jsonTree)
-    } catch (_: Exception) {
-        GenericError("Could not parse CallError, invalid [json-]format").left()
-    }
-
-    private fun parseCallError(jsonArray: JsonArray): Either<Ocpp16Error, CallError> {
+    fun deserialize(jsonArray: JsonArray): Either<Ocpp16Error, CallError> {
+        var uniqueId: String? = null
         return try {
             require(jsonArray.size() == CALL_ERROR_ENTRIES)
 
             val messageTypeId = jsonArray.get(MESSAGE_TYPE_ID_INDEX).asInt
             require(messageTypeId == CALL_ERROR_MESSAGE_TYPE_ID)
 
-            val uniqueId = jsonArray.get(UNIQUE_ID_INDEX).asString
+            uniqueId = jsonArray.get(UNIQUE_ID_INDEX).asString
 
             val errorCodeStr = jsonArray.get(ERROR_CODE_INDEX).asString
             val errorCode = Ocpp16ErrorCode.valueOf(errorCodeStr)
@@ -80,7 +71,7 @@ object CallErrorTypeAdapter {
 
             CallError(uniqueId, errorCode, errorDescription, errorDetails.toString()).right()
         } catch (_: Exception) {
-            GenericError("Could not parse CallError, invalid [json-]format").left()
+            GenericError("Could not parse CallError, invalid [json-]format", uniqueId).left()
         }
     }
 }

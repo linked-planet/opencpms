@@ -18,22 +18,7 @@
  */
 package io.opencpms.ocpp16j.endpoint.protocol
 
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
-
-const val CALL_MESSAGE_TYPE_ID = 2
-
-data class IncomingCall(
-    val uniqueId: String,
-    val actionName: String,
-    val payload: Ocpp16IncomingMessage,
-    val messageTypeId: Int
-) : WebsocketMessage
-
-data class OutgoingCall(
-    val uniqueId: String,
-    val actionName: String,
-    val payload: Ocpp16OutgoingMessage,
-) : WebsocketMessage {
-    val messageTypeId = CALL_RESULT_MESSAGE_TYPE_ID
-}
+/**
+ * Marks any type of message which is sent in OCPP1.6J.
+ */
+interface WebsocketMessage

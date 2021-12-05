@@ -19,7 +19,6 @@
 package io.opencpms.ocpp16j.endpoint.websocket
 
 import arrow.core.Either
-import arrow.core.computations.either
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.CloseReason
 import io.ktor.http.cio.websocket.Frame
@@ -34,8 +33,11 @@ import io.opencpms.ocpp16.service.session.Ocpp16Session
 import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.json.CallErrorTypeAdapter
 import io.opencpms.ocpp16j.endpoint.json.CallResultTypeAdapter
-import io.opencpms.ocpp16j.endpoint.json.CallTypeAdapter
+import io.opencpms.ocpp16j.endpoint.json.WebsocketMessageDeserializer
 import io.opencpms.ocpp16j.endpoint.protocol.CallError
+import io.opencpms.ocpp16j.endpoint.protocol.IncomingCall
+import io.opencpms.ocpp16j.endpoint.protocol.IncomingCallResult
+import io.opencpms.ocpp16j.endpoint.protocol.NotImplemented
 import io.opencpms.ocpp16j.endpoint.protocol.OutgoingCallResult
 import io.opencpms.ocpp16j.endpoint.protocol.toCallError
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
@@ -93,25 +95,39 @@ class WebsocketSession(
 
                     log.trace("Received message '$text' [$chargePointId]")
 
-                    val callResponseEither = either<CallError, OutgoingCallResult> {
-                        val call = CallTypeAdapter.deserialize(text).bind()
-                        val uniqueId = call.uniqueId
-                        val incomingMessage = call.payload
+                    val incomingMessage = WebsocketMessageDeserializer.deserialize(text) { it }
+                        .fold(
+                            { it.toCallError() },
+                            { it }
+                        )
 
-                        handler(this@WebsocketSession, incomingMessage)
-                            .map { OutgoingCallResult(uniqueId, it) }
-                            .mapLeft { it.toCallError(uniqueId) }.bind()
-                    }
-                    val serializedCallResponse = callResponseEither.fold(
-                        ifLeft = {
-                            CallErrorTypeAdapter.serialize(it)
-                        },
-                        ifRight = {
-                            CallResultTypeAdapter.serialize(it)
+                    val serializedOutgoingMessage = when (incomingMessage) {
+                        is IncomingCall -> {
+                            handler(this@WebsocketSession, incomingMessage.payload)
+                                .fold(
+                                    {
+                                        CallErrorTypeAdapter.serialize(it.toCallError())
+                                    },
+                                    {
+                                        val response = OutgoingCallResult(incomingMessage.uniqueId, it)
+                                        CallResultTypeAdapter.serialize(response)
+                                    }
+                                )
                         }
-                    )
+                        is IncomingCallResult -> {
+                            val error = NotImplemented().toCallError()
+                            CallErrorTypeAdapter.serialize(error)
+                        }
+                        is CallError -> {
+                            CallErrorTypeAdapter.serialize(incomingMessage)
+                        }
+                        else -> {
+                            val error = NotImplemented().toCallError()
+                            CallErrorTypeAdapter.serialize(error)
+                        }
+                    }
 
-                    session.outgoing.send(Frame.Text(serializedCallResponse))
+                    session.outgoing.send(Frame.Text(serializedOutgoingMessage))
                 }
                 else -> {
                     log.error("Dropping unknown message type [$chargePointId]")

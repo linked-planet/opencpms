@@ -22,8 +22,8 @@ import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
 
 // ----- CallResponse
-interface OutgoingCallResponse
-interface IncomingCallResponse
+interface OutgoingCallResponse : WebsocketMessage
+interface IncomingCallResponse : WebsocketMessage
 
 // ----- CallResult
 const val CALL_RESULT_MESSAGE_TYPE_ID = 3

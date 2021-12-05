@@ -28,10 +28,10 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
-import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
 import io.opencpms.ocpp16.service.Ocpp16IncomingMessageService
-import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
 import io.opencpms.ocpp16.service.ProtocolError
+import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
+import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.config.AppConfig
 import io.opencpms.ocpp16j.endpoint.protocol.CALL_MESSAGE_TYPE_ID
 import io.opencpms.ocpp16j.endpoint.websocket.configureSockets
@@ -44,6 +44,7 @@ import util.readFileAsText
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
+@Suppress("MaxLineLength")
 class WebsocketSessionTest {
 
     private val appConfig = spyk<AppConfig>()
@@ -107,6 +108,7 @@ class WebsocketSessionTest {
         // Mocking
         val mockUUID = "d16d2312-03fe-4dd8-8d06-ea29b7ca2269"
         val mockResponse = ProtocolError(
+            mockUUID,
             "details"
         )
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
@@ -176,7 +178,7 @@ class WebsocketSessionTest {
                           4,
                           "UNKNOWN",
                           "GenericError",
-                          "Could not parse Call, invalid [json-]format",
+                          "Could not parse CallResult, invalid [json-]format",
                           {}
                         ]
                     """.trimIndent()
@@ -216,9 +218,9 @@ class WebsocketSessionTest {
                     val expectedResponseJson = """
                         [
                           4,
-                          "UNKNOWN",
-                          "GenericError",
-                          "Could not parse Call, invalid [json-]format",
+                          "BootNotification",
+                          "FormationViolation",
+                          "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
                           {}
                         ]
                     """.trimIndent()
@@ -258,9 +260,9 @@ class WebsocketSessionTest {
                     val expectedResponseJson = """
                         [
                           4,
-                          "UNKNOWN",
-                          "GenericError",
-                          "Could not parse Call, invalid [json-]format",
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "FormationViolation",
+                          "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
                           {}
                         ]
                     """.trimIndent()
@@ -297,9 +299,9 @@ class WebsocketSessionTest {
                     val expectedResponseJson = """
                         [
                           4,
-                          "UNKNOWN",
+                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
                           "GenericError",
-                          "Could not parse Call, invalid [json-]format",
+                          "Could not parse CallResult, invalid [json-]format",
                           {}
                         ]
                     """.trimIndent()
@@ -342,7 +344,7 @@ class WebsocketSessionTest {
                           4,
                           "UNKNOWN",
                           "GenericError",
-                          "Could not parse Call, invalid [json-]format",
+                          "Invalid json",
                           {}
                         ]
                     """.trimIndent()

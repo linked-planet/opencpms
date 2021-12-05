@@ -23,3 +23,9 @@ const val OCPP16_PACKAGE_NAME = "io.opencpms.ocpp16.protocol.message"
 const val OCPP16_CALL_CLASS_SUFFIX = "Request"
 
 const val OCPP16_CALL_RESULT_CLASS_SUFFIX = "Response"
+
+const val CALL_ENTRIES = 4
+
+const val CALL_RESULT_ENTRIES = 3
+
+const val CALL_ERROR_ENTRIES = 5

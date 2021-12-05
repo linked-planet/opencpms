@@ -18,24 +18,32 @@
  */
 package io.opencpms.ocpp16.service
 
-open class Ocpp16Error(val reason: String, val details: String? = null)
+const val UNKNOWN_UNIQUE_ID = "UNKNOWN"
 
-class NotSupportedError(details: String? = null) : Ocpp16Error(
+open class Ocpp16Error(uniqueId: String?, val reason: String, val details: String? = null) {
+    val uniqueId: String = uniqueId ?: UNKNOWN_UNIQUE_ID
+}
+
+class NotSupportedError(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String?) : Ocpp16Error(
+    uniqueId,
     "Requested Action is recognized but not supported by the receiver",
-    details
+    details,
 )
 
-class InternalError(details: String? = null) : Ocpp16Error(
+class InternalError(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
     "An internal error occurred and the receiver was not able to process the requested Action successfully",
     details
 )
 
-class ProtocolError(details: String? = null) : Ocpp16Error(
+class ProtocolError(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
     "Payload for Action is incomplete",
     details
 )
 
-class SecurityError(details: String? = null) : Ocpp16Error(
+class SecurityError(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
     "During the processing of Action a security issue occurred " +
             "preventing receiver from completing the Action successfully",
     details
