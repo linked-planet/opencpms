@@ -7,8 +7,25 @@ application {
     mainClass.set("io.opencpms.ocpp16j.endpoint.ApplicationKt")
 }
 
+// Configure itests
+sourceSets {
+    create("integrationTest") {
+        java.srcDirs("src/integrationTest/kotlin")
+        resources.srcDirs("src/integrationTest/resources")
+        compileClasspath += sourceSets.main.get().output
+        runtimeClasspath += sourceSets.main.get().output
+    }
+}
+
+val integrationTestImplementation by configurations.getting {
+    extendsFrom(configurations.testImplementation.get())
+}
+configurations["integrationTestRuntimeOnly"].extendsFrom(configurations.runtimeOnly.get())
+
+// JVM
 val jvmTarget: String by project
 
+// Deps
 val ktor_version: String by project
 val kotlin_version: String by project
 val logback_version: String by project
@@ -52,9 +69,22 @@ dependencies {
 
     // Mockk
     testImplementation("io.mockk:mockk:$mockk_version")
+
+    // Docile-Charge-Point
+    integrationTestImplementation("com.infuse-ev:docile-charge-point-loader_2.12:0.6.0")
 }
 
+// Tasks
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions.jvmTarget = jvmTarget
     kotlinOptions.freeCompilerArgs = listOf("-Xuse-experimental=kotlin.Experimental")
+}
+
+tasks {
+    register<Test>("integrationTest") {
+        group = "verification"
+        testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+        classpath = sourceSets["integrationTest"].runtimeClasspath
+        useJUnit()
+    }
 }

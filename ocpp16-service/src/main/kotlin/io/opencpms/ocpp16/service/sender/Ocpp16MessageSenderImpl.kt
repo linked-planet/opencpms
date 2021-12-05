@@ -24,7 +24,6 @@ import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
 import io.opencpms.ocpp16.service.Ocpp16Error
 import io.opencpms.ocpp16.service.session.Ocpp16Session
 
-@Suppress("MagicNumber")
 class Ocpp16MessageSenderImpl : Ocpp16MessageSender {
 
     val transactionManager = null
