@@ -145,15 +145,15 @@ class WebsocketSession(
                                         )
                                     }
                                     else -> {
-                                        TODO()
+                                        log.error("Ignoring unknown message type [$chargePointId]")
                                     }
                                 }
                             }
                         )
                 }
                 else -> {
-                    log.error("Dropping unknown message type [$chargePointId]")
-                    session.close(CloseReason(CloseReason.Codes.NORMAL, "Client sent unknown message type"))
+                    log.error("Illegal frame content, ignoring message [$chargePointId]")
+                    session.close(CloseReason(CloseReason.Codes.NORMAL, "Client sent illegal frame content"))
                 }
             }
         }
