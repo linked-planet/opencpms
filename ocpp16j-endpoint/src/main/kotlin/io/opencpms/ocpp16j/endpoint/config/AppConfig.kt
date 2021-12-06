@@ -41,4 +41,11 @@ class AppConfig {
         val privateKeyPassword: String = tlsConfigBlock.getString("privateKeyPassword")
         TlsConfig(keyStoreFile, keyStorePassword, privateKeyAlias, privateKeyPassword)
     } else null
+
+    data class TlsConfig(
+        val keyStoreFile: File,
+        val keyStorePassword: String,
+        val privateKeyAlias: String,
+        val privateKeyPassword: String
+    )
 }

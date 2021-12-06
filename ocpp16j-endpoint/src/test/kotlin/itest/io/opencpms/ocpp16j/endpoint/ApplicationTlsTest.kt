@@ -25,7 +25,6 @@ import io.ktor.server.jetty.Jetty
 import io.mockk.every
 import io.mockk.mockk
 import io.opencpms.ocpp16j.endpoint.config.AppConfig
-import io.opencpms.ocpp16j.endpoint.config.TlsConfig
 import io.opencpms.ocpp16j.endpoint.createApplicationEngineEnvironment
 import io.opencpms.ocpp16j.endpoint.createContext
 import java.io.File
@@ -49,7 +48,7 @@ class ApplicationTlsTest {
             every { appConfig.useBasicAuth }.returns(false)
             every { appConfig.useTls }.returns(true)
             every { appConfig.tlsConfig }.returns(
-                TlsConfig(
+                AppConfig.TlsConfig(
                     File("src/test/resources/keystore.jks"),
                     "bar",
                     "sample",
