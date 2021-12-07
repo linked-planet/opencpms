@@ -23,6 +23,7 @@ import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.engine.sslConnector
 import io.ktor.server.jetty.Jetty
+import io.ktor.server.jetty.JettyApplicationEngine
 import io.opencpms.ocpp16.service.auth.Ocpp16AuthServiceImpl
 import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiverImpl
 import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
@@ -36,9 +37,13 @@ import org.kodein.di.singleton
 fun main() {
     val appConfig = AppConfig()
     val context = createContext(appConfig)
-    val environment = createApplicationEngineEnvironment(appConfig, context)
 
-    embeddedServer(Jetty, environment).start(wait = true)
+    startServer(appConfig, context)
+}
+
+fun startServer(appConfig: AppConfig, context: DI, wait: Boolean = true): JettyApplicationEngine {
+    val environment = createApplicationEngineEnvironment(appConfig, context)
+    return embeddedServer(Jetty, environment).start(wait = wait)
 }
 
 fun createContext(appConfig: AppConfig): DI = DI {

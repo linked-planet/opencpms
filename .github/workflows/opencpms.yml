@@ -31,5 +31,11 @@ jobs:
       - name: Detekt check
         run: ./gradlew detekt
 
-      - name: Gradle Build
-        run: ./gradlew build
+      - name: Build
+        run: ./gradlew build -x test
+
+      - name: Run tests
+        run: ./gradlew test
+
+      - name: Run integration tests
+        run: ./gradlew integrationTest
