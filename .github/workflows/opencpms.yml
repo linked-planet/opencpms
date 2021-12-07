@@ -24,6 +24,9 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
 
+      - name: Clean
+        run: ./gradlew clean
+
       - name: License check
         run: ./gradlew license
 
