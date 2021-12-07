@@ -29,7 +29,7 @@ import io.mockk.spyk
 import io.mockk.verify
 import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
 import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiver
-import io.opencpms.ocpp16.service.ProtocolError
+import io.opencpms.ocpp16.protocol.ProtocolError
 import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
 import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.config.AppConfig

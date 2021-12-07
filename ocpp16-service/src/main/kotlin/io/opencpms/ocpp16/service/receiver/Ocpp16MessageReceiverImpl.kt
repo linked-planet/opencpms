@@ -23,7 +23,7 @@ import arrow.core.right
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
 import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
-import io.opencpms.ocpp16.service.Ocpp16Error
+import io.opencpms.ocpp16.protocol.Ocpp16Error
 import io.opencpms.ocpp16.service.session.Ocpp16Session
 import java.time.OffsetDateTime
 

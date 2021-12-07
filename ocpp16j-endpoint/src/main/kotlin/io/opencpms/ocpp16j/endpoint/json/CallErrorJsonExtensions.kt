@@ -23,7 +23,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import io.opencpms.ocpp16.service.Ocpp16Error
+import io.opencpms.ocpp16.protocol.Ocpp16Error
 import io.opencpms.ocpp16j.endpoint.protocol.CALL_ERROR_MESSAGE_TYPE_ID
 import io.opencpms.ocpp16j.endpoint.protocol.CallError
 import io.opencpms.ocpp16j.endpoint.protocol.GenericError

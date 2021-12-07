@@ -25,7 +25,7 @@ import arrow.core.right
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException
 import com.google.gson.JsonArray
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.service.Ocpp16Error
+import io.opencpms.ocpp16.protocol.Ocpp16Error
 import io.opencpms.ocpp16j.endpoint.protocol.CALL_MESSAGE_TYPE_ID
 import io.opencpms.ocpp16j.endpoint.protocol.FormationViolation
 import io.opencpms.ocpp16j.endpoint.protocol.GenericError

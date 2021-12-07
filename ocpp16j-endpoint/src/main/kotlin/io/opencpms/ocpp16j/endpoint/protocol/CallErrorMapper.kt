@@ -18,15 +18,16 @@
  */
 package io.opencpms.ocpp16j.endpoint.protocol
 
-import io.opencpms.ocpp16.service.NotSupportedError
-import io.opencpms.ocpp16.service.Ocpp16Error
-import io.opencpms.ocpp16.service.ProtocolError
-import io.opencpms.ocpp16.service.SecurityError
+import io.opencpms.ocpp16.protocol.InternalError
+import io.opencpms.ocpp16.protocol.NotSupportedError
+import io.opencpms.ocpp16.protocol.Ocpp16Error
+import io.opencpms.ocpp16.protocol.ProtocolError
+import io.opencpms.ocpp16.protocol.SecurityError
 
 fun Ocpp16Error.toCallError(): CallError {
     val errorCode = when (this) {
         is NotSupportedError -> Ocpp16ErrorCode.NotSupported
-        is io.opencpms.ocpp16.service.InternalError -> Ocpp16ErrorCode.InternalError
+        is InternalError -> Ocpp16ErrorCode.InternalError
         is ProtocolError -> Ocpp16ErrorCode.ProtocolError
         is SecurityError -> Ocpp16ErrorCode.SecurityError
         is FormationViolation -> Ocpp16ErrorCode.FormationViolation
@@ -44,7 +45,7 @@ fun Ocpp16Error.toCallError(): CallError {
 fun CallError.toOcpp16Error(): Ocpp16Error {
     return when (this.errorCode) {
         Ocpp16ErrorCode.NotSupported -> NotSupportedError(uniqueId, errorDetails)
-        Ocpp16ErrorCode.InternalError -> io.opencpms.ocpp16.service.InternalError(uniqueId, errorDetails)
+        Ocpp16ErrorCode.InternalError -> InternalError(uniqueId, errorDetails)
         Ocpp16ErrorCode.ProtocolError -> ProtocolError(uniqueId, errorDetails)
         Ocpp16ErrorCode.SecurityError -> SecurityError(uniqueId, errorDetails)
         Ocpp16ErrorCode.FormationViolation -> FormationViolation(uniqueId, errorDetails)

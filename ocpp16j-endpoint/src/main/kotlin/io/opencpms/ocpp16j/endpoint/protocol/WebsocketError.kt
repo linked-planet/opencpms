@@ -18,8 +18,8 @@
  */
 package io.opencpms.ocpp16j.endpoint.protocol
 
-import io.opencpms.ocpp16.service.Ocpp16Error
-import io.opencpms.ocpp16.service.UNKNOWN_UNIQUE_ID
+import io.opencpms.ocpp16.protocol.Ocpp16Error
+import io.opencpms.ocpp16.protocol.UNKNOWN_UNIQUE_ID
 
 class NotImplemented(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
     uniqueId,

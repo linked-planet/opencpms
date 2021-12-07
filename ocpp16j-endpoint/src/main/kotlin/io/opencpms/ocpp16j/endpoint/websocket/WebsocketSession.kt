@@ -30,7 +30,7 @@ import io.ktor.websocket.DefaultWebSocketServerSession
 import io.ktor.websocket.application
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
-import io.opencpms.ocpp16.service.Ocpp16Error
+import io.opencpms.ocpp16.protocol.Ocpp16Error
 import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiver
 import io.opencpms.ocpp16.service.session.Ocpp16Session
 import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
