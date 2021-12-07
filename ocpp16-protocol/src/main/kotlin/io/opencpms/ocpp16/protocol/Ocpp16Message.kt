@@ -18,18 +18,46 @@
  */
 package io.opencpms.ocpp16.protocol
 
-/**
- * Marks every OCPP1.6 message which is sent over the wire, independent of the direction.
- * So the message might be sent from Central System (= CS) to Charge Point (= CP) or vice versa.
- */
-interface Ocpp16Message
+private const val OCPP16_PACKAGE_NAME = "io.opencpms.ocpp16.protocol.message"
+
+private const val OCPP16_REQUEST_SUFFIX = "Request"
+
+private const val OCPP16_RESPONSE_SUFFIX = "Response"
+
+interface Ocpp16Request {
+    fun getActionName() = this.javaClass.name.removeSuffix(OCPP16_REQUEST_SUFFIX)
+
+    companion object {
+        fun loadClassForAction(actionName: String): Class<*> =
+            Class.forName("$OCPP16_PACKAGE_NAME.${actionName}$OCPP16_REQUEST_SUFFIX")
+    }
+}
+
+interface Ocpp16Response {
+    fun getActionName(): String = this.javaClass.name.removeSuffix("Response")
+
+    companion object {
+        fun loadClassForAction(actionName: String): Class<*> =
+            Class.forName("$OCPP16_PACKAGE_NAME.${actionName}$OCPP16_RESPONSE_SUFFIX")
+    }
+}
 
 /**
- * Marks an OCPP1.6 message which is sent from CS -> CP (= outgoing).
+ * Marks an OCPP1.6 request which is sent from CS -> CP (= outgoing).
  */
-interface Ocpp16OutgoingMessage : Ocpp16Message
+interface Ocpp16OutgoingRequest : Ocpp16Request
 
 /**
- * Marks an OCPP1.6 message which is sent from CP -> CS (= incoming).
+ * Marks an OCPP1.6 response which is sent from CS -> CP (= outgoing).
  */
-interface Ocpp16IncomingMessage : Ocpp16Message
+interface Ocpp16OutgoingResponse : Ocpp16Response
+
+/**
+ * Marks an OCPP1.6 request which is sent from CP -> CS (= incoming).
+ */
+interface Ocpp16IncomingRequest : Ocpp16Request
+
+/**
+ * Marks an OCPP1.6 response which is sent from CP -> CS (= incoming).
+ */
+interface Ocpp16IncomingResponse : Ocpp16Response

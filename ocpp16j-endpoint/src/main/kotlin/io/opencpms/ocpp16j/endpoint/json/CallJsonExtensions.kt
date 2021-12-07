@@ -24,8 +24,9 @@ import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException
 import com.google.gson.JsonArray
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16Error
+import io.opencpms.ocpp16.protocol.Ocpp16IncomingRequest
+import io.opencpms.ocpp16.protocol.Ocpp16Request
 import io.opencpms.ocpp16j.endpoint.protocol.CALL_MESSAGE_TYPE_ID
 import io.opencpms.ocpp16j.endpoint.protocol.FormationViolation
 import io.opencpms.ocpp16j.endpoint.protocol.GenericError
@@ -81,12 +82,10 @@ private fun parseRawCall(jsonArray: JsonArray): Either<Ocpp16Error, RawIncomingC
 @Suppress("TooGenericExceptionCaught")
 private fun parseAction(raw: RawIncomingCall): Either<Ocpp16Error, IncomingCall> = try {
     val actionName = raw.actionName
-
-    // In a call we are working with requests only
-    val actionClass = Class.forName("$OCPP16_PACKAGE_NAME.${actionName}$OCPP16_CALL_CLASS_SUFFIX")
+    val actionClass = Ocpp16Request.loadClassForAction(actionName)
 
     // Use special jackson parser for action as gson doesn't call init block during class initialization
-    val action = JACKSON.readValue(raw.payload, actionClass) as Ocpp16IncomingMessage
+    val action = JACKSON.readValue(raw.payload, actionClass) as Ocpp16IncomingRequest
 
     IncomingCall(raw.uniqueId, actionName, action, raw.messageTypeId).right()
 } catch (e: Exception) {

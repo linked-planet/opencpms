@@ -27,7 +27,7 @@
  */
 package io.opencpms.ocpp16.protocol.message
 
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
+import io.opencpms.ocpp16.protocol.Ocpp16IncomingRequest
 
 data class BootNotificationRequest(
     val chargePointVendor: String,
@@ -39,7 +39,7 @@ data class BootNotificationRequest(
     val imsi: String? = null,
     val meterType: String? = null,
     val meterSerialNumber: String? = null
-) : Ocpp16IncomingMessage {
+) : Ocpp16IncomingRequest {
 
     init {
         require(chargePointVendor.length <= 20) { "chargePointVendor length > maximum 20 - ${chargePointVendor.length}" }

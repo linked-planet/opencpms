@@ -27,14 +27,14 @@
  */
 package io.opencpms.ocpp16.protocol.message
 
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
+import io.opencpms.ocpp16.protocol.Ocpp16OutgoingResponse
 import java.time.OffsetDateTime
 
 data class BootNotificationResponse(
     val status: Status,
     val currentTime: OffsetDateTime,
     val interval: Long
-) : Ocpp16OutgoingMessage {
+) : Ocpp16OutgoingResponse {
 
     enum class Status {
         Accepted,

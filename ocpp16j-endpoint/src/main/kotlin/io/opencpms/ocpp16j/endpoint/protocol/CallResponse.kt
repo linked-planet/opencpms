@@ -18,8 +18,8 @@
  */
 package io.opencpms.ocpp16j.endpoint.protocol
 
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
+import io.opencpms.ocpp16.protocol.Ocpp16IncomingResponse
+import io.opencpms.ocpp16.protocol.Ocpp16OutgoingResponse
 
 // ----- CallResponse
 interface OutgoingCallResponse : WebsocketMessage
@@ -30,14 +30,14 @@ const val CALL_RESULT_MESSAGE_TYPE_ID = 3
 
 data class OutgoingCallResult(
     override val uniqueId: String,
-    val payload: Ocpp16OutgoingMessage
+    val payload: Ocpp16OutgoingResponse
 ) : OutgoingCallResponse {
     val messageTypeId = CALL_RESULT_MESSAGE_TYPE_ID
 }
 
 data class IncomingCallResult(
     override val uniqueId: String,
-    val payload: Ocpp16IncomingMessage,
+    val payload: Ocpp16IncomingResponse,
     val messageTypeId: Int
 ) : IncomingCallResponse {
     companion object

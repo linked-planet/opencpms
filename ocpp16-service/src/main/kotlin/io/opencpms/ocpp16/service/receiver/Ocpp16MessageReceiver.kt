@@ -19,15 +19,15 @@
 package io.opencpms.ocpp16.service.receiver
 
 import arrow.core.Either
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16Error
+import io.opencpms.ocpp16.protocol.Ocpp16IncomingRequest
+import io.opencpms.ocpp16.protocol.Ocpp16OutgoingResponse
 import io.opencpms.ocpp16.service.session.Ocpp16Session
 
 interface Ocpp16MessageReceiver {
 
     fun handleMessage(
         session: Ocpp16Session,
-        message: Ocpp16IncomingMessage
-    ): Either<Ocpp16Error, Ocpp16OutgoingMessage>
+        message: Ocpp16IncomingRequest
+    ): Either<Ocpp16Error, Ocpp16OutgoingResponse>
 }

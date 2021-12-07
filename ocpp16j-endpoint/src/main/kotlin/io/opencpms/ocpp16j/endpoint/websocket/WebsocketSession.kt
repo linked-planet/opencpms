@@ -28,9 +28,9 @@ import io.ktor.http.cio.websocket.close
 import io.ktor.http.cio.websocket.readText
 import io.ktor.websocket.DefaultWebSocketServerSession
 import io.ktor.websocket.application
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
 import io.opencpms.ocpp16.protocol.Ocpp16Error
+import io.opencpms.ocpp16.protocol.Ocpp16IncomingResponse
+import io.opencpms.ocpp16.protocol.Ocpp16OutgoingRequest
 import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiver
 import io.opencpms.ocpp16.service.session.Ocpp16Session
 import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
@@ -107,7 +107,7 @@ class WebsocketSession(
     private val outgoingMessagesLock = Mutex()
 
     private val pendingIncomingCallResponses =
-        ConcurrentHashMap<String, Pair<CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingMessage>>, Job>>()
+        ConcurrentHashMap<String, Pair<CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>>, Job>>()
 
     suspend fun handleIncomingMessages() {
         for (frame in session.incoming) {
@@ -175,7 +175,7 @@ class WebsocketSession(
         sendText(callResponse)
     }
 
-    private fun handleIncomingCallResponse(uniqueId: String, result: Either<Ocpp16Error, Ocpp16IncomingMessage>) {
+    private fun handleIncomingCallResponse(uniqueId: String, result: Either<Ocpp16Error, Ocpp16IncomingResponse>) {
         pendingIncomingCallResponses[uniqueId]
             ?.let {
                 outgoingMessagesLock.unlock()
@@ -192,17 +192,17 @@ class WebsocketSession(
             }
     }
 
-    suspend fun sendOutgoingCall(message: Ocpp16OutgoingMessage): Deferred<Either<Ocpp16Error, Ocpp16IncomingMessage>> {
+    suspend fun sendOutgoingCall(message: Ocpp16OutgoingRequest):
+            Deferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> {
 
-        val promise: CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingMessage>> = CompletableDeferred()
+        val promise: CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> = CompletableDeferred()
 
         // Send message in background and return instantly
         val uniqueId = UUID.randomUUID().toString()
         val sendMessageTask = withContext(Dispatchers.IO) {
             launch {
                 outgoingMessagesLock.lock()
-                val actionName = message.javaClass.name.removeSuffix("Request") // TODO: extract
-                val call = OutgoingCall(uniqueId, actionName, message)
+                val call = OutgoingCall(uniqueId, message.getActionName(), message)
                 sendText(call.serialize())
             }
         }

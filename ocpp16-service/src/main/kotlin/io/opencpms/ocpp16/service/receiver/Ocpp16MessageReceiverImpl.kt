@@ -20,10 +20,10 @@ package io.opencpms.ocpp16.service.receiver
 
 import arrow.core.Either
 import arrow.core.right
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingMessage
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingMessage
-import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
 import io.opencpms.ocpp16.protocol.Ocpp16Error
+import io.opencpms.ocpp16.protocol.Ocpp16IncomingRequest
+import io.opencpms.ocpp16.protocol.Ocpp16OutgoingResponse
+import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
 import io.opencpms.ocpp16.service.session.Ocpp16Session
 import java.time.OffsetDateTime
 
@@ -32,8 +32,8 @@ class Ocpp16MessageReceiverImpl : Ocpp16MessageReceiver {
 
     override fun handleMessage(
         session: Ocpp16Session,
-        message: Ocpp16IncomingMessage
-    ): Either<Ocpp16Error, Ocpp16OutgoingMessage> {
+        message: Ocpp16IncomingRequest
+    ): Either<Ocpp16Error, Ocpp16OutgoingResponse> {
         return BootNotificationResponse(BootNotificationResponse.Status.Accepted, OffsetDateTime.now(), 10L).right()
     }
 }
