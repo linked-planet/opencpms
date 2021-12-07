@@ -34,10 +34,8 @@ import io.opencpms.ocpp16.service.Ocpp16Error
 import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiver
 import io.opencpms.ocpp16.service.session.Ocpp16Session
 import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
-import io.opencpms.ocpp16j.endpoint.json.CallErrorTypeAdapter
-import io.opencpms.ocpp16j.endpoint.json.CallResultTypeAdapter
-import io.opencpms.ocpp16j.endpoint.json.CallTypeAdapter
 import io.opencpms.ocpp16j.endpoint.json.WebsocketMessageDeserializer
+import io.opencpms.ocpp16j.endpoint.json.serialize
 import io.opencpms.ocpp16j.endpoint.protocol.CallError
 import io.opencpms.ocpp16j.endpoint.protocol.GenericError
 import io.opencpms.ocpp16j.endpoint.protocol.IncomingCall
@@ -122,7 +120,7 @@ class WebsocketSession(
                     WebsocketMessageDeserializer.deserialize(text) { it }
                         .fold(
                             {
-                                sendText(CallErrorTypeAdapter.serialize(it.toCallError()))
+                                sendText(it.toCallError().serialize())
                             },
                             { incomingMessage ->
                                 val uniqueId = incomingMessage.uniqueId
@@ -167,11 +165,10 @@ class WebsocketSession(
         val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
             .fold(
                 {
-                    CallErrorTypeAdapter.serialize(it.toCallError())
+                    it.toCallError().serialize()
                 },
                 {
-                    val response = OutgoingCallResult(message.uniqueId, it)
-                    CallResultTypeAdapter.serialize(response)
+                    OutgoingCallResult(message.uniqueId, it).serialize()
                 }
             )
 
@@ -206,8 +203,7 @@ class WebsocketSession(
                 outgoingMessagesLock.lock()
                 val actionName = message.javaClass.name.removeSuffix("Request") // TODO: extract
                 val call = OutgoingCall(uniqueId, actionName, message)
-                val serializedCall = CallTypeAdapter.serialize(call)
-                sendText(serializedCall)
+                sendText(call.serialize())
             }
         }
         // Register listener which is called when message was sent

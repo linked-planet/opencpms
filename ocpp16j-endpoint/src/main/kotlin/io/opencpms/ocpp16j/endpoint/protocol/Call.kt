@@ -28,7 +28,9 @@ data class IncomingCall(
     val actionName: String,
     val payload: Ocpp16IncomingMessage,
     val messageTypeId: Int
-) : WebsocketMessage
+) : WebsocketMessage {
+    companion object
+}
 
 data class OutgoingCall(
     override val uniqueId: String,

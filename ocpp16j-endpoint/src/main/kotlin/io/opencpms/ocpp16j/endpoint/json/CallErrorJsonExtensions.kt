@@ -36,42 +36,39 @@ private const val ERROR_CODE_INDEX = 2
 private const val ERROR_DESCRIPTION_INDEX = 3
 private const val ERROR_DETAILS_INDEX = 4
 
+fun CallError.serialize(): String {
+    val payload = JsonObject()
+    errorDetails?.let { payload.addProperty("description", errorDetails) }
+
+    val jsonArray = JsonArray()
+    jsonArray.add(messageTypeId)
+    jsonArray.add(uniqueId)
+    jsonArray.add(errorCode.toString())
+    jsonArray.add(errorDescription)
+    jsonArray.add(payload)
+    return GSON.toJson(jsonArray)
+}
+
 @Suppress("TooGenericExceptionCaught")
-object CallErrorTypeAdapter {
+fun CallError.Companion.deserialize(jsonArray: JsonArray): Either<Ocpp16Error, CallError> {
+    var uniqueId: String? = null
+    return try {
+        require(jsonArray.size() == CALL_ERROR_ENTRIES)
 
-    fun serialize(callError: CallError): String {
-        val payload = JsonObject()
-        callError.errorDetails?.let { payload.addProperty("description", callError.errorDetails) }
+        val messageTypeId = jsonArray.get(MESSAGE_TYPE_ID_INDEX).asInt
+        require(messageTypeId == CALL_ERROR_MESSAGE_TYPE_ID)
 
-        val jsonArray = JsonArray()
-        jsonArray.add(callError.messageTypeId)
-        jsonArray.add(callError.uniqueId)
-        jsonArray.add(callError.errorCode.toString())
-        jsonArray.add(callError.errorDescription)
-        jsonArray.add(payload)
-        return GSON.toJson(jsonArray)
-    }
+        uniqueId = jsonArray.get(UNIQUE_ID_INDEX).asString
 
-    fun deserialize(jsonArray: JsonArray): Either<Ocpp16Error, CallError> {
-        var uniqueId: String? = null
-        return try {
-            require(jsonArray.size() == CALL_ERROR_ENTRIES)
+        val errorCodeStr = jsonArray.get(ERROR_CODE_INDEX).asString
+        val errorCode = Ocpp16ErrorCode.valueOf(errorCodeStr)
 
-            val messageTypeId = jsonArray.get(MESSAGE_TYPE_ID_INDEX).asInt
-            require(messageTypeId == CALL_ERROR_MESSAGE_TYPE_ID)
+        val errorDescription = jsonArray.get(ERROR_DESCRIPTION_INDEX).asString
 
-            uniqueId = jsonArray.get(UNIQUE_ID_INDEX).asString
+        val errorDetails = jsonArray.get(ERROR_DETAILS_INDEX).asJsonObject
 
-            val errorCodeStr = jsonArray.get(ERROR_CODE_INDEX).asString
-            val errorCode = Ocpp16ErrorCode.valueOf(errorCodeStr)
-
-            val errorDescription = jsonArray.get(ERROR_DESCRIPTION_INDEX).asString
-
-            val errorDetails = jsonArray.get(ERROR_DETAILS_INDEX).asJsonObject
-
-            CallError(uniqueId, errorCode, errorDescription, errorDetails.toString()).right()
-        } catch (_: Exception) {
-            GenericError("Could not parse CallError, invalid [json-]format", uniqueId).left()
-        }
+        CallError(uniqueId, errorCode, errorDescription, errorDetails.toString()).right()
+    } catch (_: Exception) {
+        GenericError("Could not parse CallError, invalid [json-]format", uniqueId).left()
     }
 }

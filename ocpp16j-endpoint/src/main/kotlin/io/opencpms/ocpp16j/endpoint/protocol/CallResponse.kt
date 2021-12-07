@@ -39,7 +39,9 @@ data class IncomingCallResult(
     override val uniqueId: String,
     val payload: Ocpp16IncomingMessage,
     val messageTypeId: Int
-) : IncomingCallResponse
+) : IncomingCallResponse {
+    companion object
+}
 
 const val CALL_ERROR_MESSAGE_TYPE_ID = 4
 
@@ -51,6 +53,8 @@ data class CallError(
     val errorDetails: String?
 ) : OutgoingCallResponse, IncomingCallResponse {
     val messageTypeId: Int = CALL_ERROR_MESSAGE_TYPE_ID
+
+    companion object
 }
 
 enum class Ocpp16ErrorCode {

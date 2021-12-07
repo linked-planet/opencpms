@@ -23,7 +23,10 @@ import arrow.core.left
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import io.opencpms.ocpp16.service.Ocpp16Error
+import io.opencpms.ocpp16j.endpoint.protocol.CallError
 import io.opencpms.ocpp16j.endpoint.protocol.GenericError
+import io.opencpms.ocpp16j.endpoint.protocol.IncomingCall
+import io.opencpms.ocpp16j.endpoint.protocol.IncomingCallResult
 import io.opencpms.ocpp16j.endpoint.protocol.NotImplemented
 import io.opencpms.ocpp16j.endpoint.protocol.WebsocketMessage
 
@@ -44,9 +47,9 @@ object WebsocketMessageDeserializer {
         resolveClassByUniqueId: (String) -> String
     ): Either<Ocpp16Error, WebsocketMessage> =
         when (jsonArray.size()) {
-            CALL_ENTRIES -> CallTypeAdapter.deserialize(jsonArray)
-            CALL_RESULT_ENTRIES -> CallResultTypeAdapter.deserialize(jsonArray, resolveClassByUniqueId)
-            CALL_ERROR_ENTRIES -> CallErrorTypeAdapter.deserialize(jsonArray)
+            CALL_ENTRIES -> IncomingCall.deserialize(jsonArray)
+            CALL_RESULT_ENTRIES -> IncomingCallResult.deserialize(jsonArray, resolveClassByUniqueId)
+            CALL_ERROR_ENTRIES -> CallError.deserialize(jsonArray)
             else -> NotImplemented(details = "Unknown message format").left()
         }
 }
