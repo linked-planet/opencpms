@@ -75,15 +75,14 @@ fun DefaultWebSocketServerSession.ocpp16Session(
         log.debug("Created session [$chargePointId]")
 
         try {
-            // Only one message at the time is supported in OCPP1.6
             runBlocking {
                 handler(session)
             }
-
         } catch (_: ClosedReceiveChannelException) {
             log.debug("Closed connection [$chargePointId]")
         }
 
+        session.closeSession()
         sessionManager.unregisterSession(chargePointId)
     } else {
         call.response.status(HttpStatusCode.NotFound)
@@ -161,6 +160,60 @@ class WebsocketSession(
         }
     }
 
+    suspend fun sendOutgoingCall(message: Ocpp16OutgoingRequest):
+            Deferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> {
+
+        val uniqueId = UUID.randomUUID().toString()
+        val promise: CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> = CompletableDeferred()
+
+        withContext(Dispatchers.Default) {
+            launch {
+                // Send message in background
+                withTimeout(REQUEST_TIMEOUT_MS) {
+                    outgoingMessagesLock.lock()
+                    val call = OutgoingCall(uniqueId, message.getActionName(), message)
+                    sendText(call.serialize())
+                }
+            }.invokeOnCompletion { error ->
+                // Register listener which is called when message sending is completed
+                error
+                    ?.let { // Error
+                        outgoingMessagesLock.unlock()
+                        promise.complete(GenericError("Could not send Call to client").left())
+                        log.error("Could not send Call to client [$chargePointId]")
+                    }
+                    ?: let { // Success
+                        // Create response timeout handler
+                        val receiveMessageTimeoutTask = launch {
+                            withTimeout(RESPONSE_TIMEOUT_MS) {
+                                outgoingMessagesLock.unlock()
+                                pendingIncomingCallResponses.remove(uniqueId)
+                            }
+                        }
+
+                        // Register for incoming response
+                        pendingIncomingCallResponses.put(uniqueId, promise to receiveMessageTimeoutTask)
+                    }
+            }
+        }
+
+        return promise
+    }
+
+    fun closeSession() {
+        pendingIncomingCallResponses.forEach {
+            // Cancel pending timeout jobs
+            val job = it.value.second
+            job.cancel()
+
+            // Resolve all pending promises with error
+            val promise = it.value.first
+            promise.complete(GenericError("Session was closed").left())
+        }
+
+        log.debug("Session closed  [$chargePointId]")
+    }
+
     private suspend fun handleIncomingCall(message: IncomingCall) {
         val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
             .fold(
@@ -190,46 +243,6 @@ class WebsocketSession(
             ?: let {
                 log.warn("Ingoring incoming CallResult/CallError as no one is waiting for it [$chargePointId]")
             }
-    }
-
-    suspend fun sendOutgoingCall(message: Ocpp16OutgoingRequest):
-            Deferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> {
-
-        val uniqueId = UUID.randomUUID().toString()
-        val promise: CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> = CompletableDeferred()
-
-        withContext(Dispatchers.Default) {
-            launch {
-                // Send message in background
-                withTimeout(REQUEST_TIMEOUT_MS) {
-                    outgoingMessagesLock.lock()
-                    val call = OutgoingCall(uniqueId, message.getActionName(), message)
-                    sendText(call.serialize())
-                }
-            }.invokeOnCompletion { error ->
-                // Register listener which is called when message sending is completed
-                error
-                    ?.let { // Error
-                        outgoingMessagesLock.unlock()
-                        promise.complete(GenericError("Could not send Call to client").left())
-                        log.error("Could not send Call to client")
-                    }
-                    ?: let { // Success
-                        // Create response timeout handler
-                        val receiveMessageTimeoutTask = launch {
-                            withTimeout(RESPONSE_TIMEOUT_MS) {
-                                outgoingMessagesLock.unlock()
-                                pendingIncomingCallResponses.remove(uniqueId)
-                            }
-                        }
-
-                        // Register for incoming response
-                        pendingIncomingCallResponses.put(uniqueId, promise to receiveMessageTimeoutTask)
-                    }
-            }
-        }
-
-        return promise
     }
 
     private suspend fun sendText(text: String) {
