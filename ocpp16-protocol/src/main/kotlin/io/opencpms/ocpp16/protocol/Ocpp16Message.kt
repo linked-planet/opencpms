@@ -18,28 +18,16 @@
  */
 package io.opencpms.ocpp16.protocol
 
-private const val OCPP16_PACKAGE_NAME = "io.opencpms.ocpp16.protocol.message"
-
 private const val OCPP16_REQUEST_SUFFIX = "Request"
 
 private const val OCPP16_RESPONSE_SUFFIX = "Response"
 
 interface Ocpp16Request {
     fun getActionName() = this.javaClass.name.removeSuffix(OCPP16_REQUEST_SUFFIX)
-
-    companion object {
-        fun loadClassForAction(actionName: String): Class<*> =
-            Class.forName("$OCPP16_PACKAGE_NAME.${actionName}$OCPP16_REQUEST_SUFFIX")
-    }
 }
 
 interface Ocpp16Response {
-    fun getActionName(): String = this.javaClass.name.removeSuffix("Response")
-
-    companion object {
-        fun loadClassForAction(actionName: String): Class<*> =
-            Class.forName("$OCPP16_PACKAGE_NAME.${actionName}$OCPP16_RESPONSE_SUFFIX")
-    }
+    fun getActionName(): String = this.javaClass.name.removeSuffix(OCPP16_RESPONSE_SUFFIX)
 }
 
 /**
