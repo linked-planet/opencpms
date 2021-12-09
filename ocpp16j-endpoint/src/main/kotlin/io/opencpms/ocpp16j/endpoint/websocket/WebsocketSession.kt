@@ -195,20 +195,19 @@ class WebsocketSession(
     suspend fun sendOutgoingCall(message: Ocpp16OutgoingRequest):
             Deferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> {
 
+        val uniqueId = UUID.randomUUID().toString()
         val promise: CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> = CompletableDeferred()
 
-        // Send message in background and return instantly
-        val uniqueId = UUID.randomUUID().toString()
-        val sendMessageTask = withContext(Dispatchers.IO) {
+        withContext(Dispatchers.Default) {
             launch {
-                outgoingMessagesLock.lock()
-                val call = OutgoingCall(uniqueId, message.getActionName(), message)
-                sendText(call.serialize())
-            }
-        }
-        // Register listener which is called when message was sent
-        withTimeout(REQUEST_TIMEOUT_MS) {
-            sendMessageTask.invokeOnCompletion { error ->
+                // Send message in background
+                withTimeout(REQUEST_TIMEOUT_MS) {
+                    outgoingMessagesLock.lock()
+                    val call = OutgoingCall(uniqueId, message.getActionName(), message)
+                    sendText(call.serialize())
+                }
+            }.invokeOnCompletion { error ->
+                // Register listener which is called when message sending is completed
                 error
                     ?.let { // Error
                         outgoingMessagesLock.unlock()
@@ -216,8 +215,7 @@ class WebsocketSession(
                         log.error("Could not send Call to client")
                     }
                     ?: let { // Success
-
-                        // Register timeout handler
+                        // Create response timeout handler
                         val receiveMessageTimeoutTask = launch {
                             withTimeout(RESPONSE_TIMEOUT_MS) {
                                 outgoingMessagesLock.unlock()
@@ -225,7 +223,7 @@ class WebsocketSession(
                             }
                         }
 
-                        // Wait for incoming message
+                        // Register for incoming response
                         pendingIncomingCallResponses.put(uniqueId, promise to receiveMessageTimeoutTask)
                     }
             }
