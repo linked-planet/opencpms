@@ -215,6 +215,7 @@ class WebsocketSession(
     }
 
     private suspend fun handleIncomingCall(message: IncomingCall) {
+        // TODO: async
         val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
             .fold(
                 {
@@ -228,21 +229,25 @@ class WebsocketSession(
         sendText(callResponse)
     }
 
-    private fun handleIncomingCallResponse(uniqueId: String, result: Either<Ocpp16Error, Ocpp16IncomingResponse>) {
-        pendingIncomingCallResponses[uniqueId]
-            ?.let {
-                outgoingMessagesLock.unlock()
-                pendingIncomingCallResponses.remove(uniqueId)
+    private suspend fun handleIncomingCallResponse(uniqueId: String, result: Either<Ocpp16Error, Ocpp16IncomingResponse>) {
+        withContext(Dispatchers.Default) {
+            launch {
+                pendingIncomingCallResponses[uniqueId]
+                    ?.let {
+                        outgoingMessagesLock.unlock()
+                        pendingIncomingCallResponses.remove(uniqueId)
 
-                val timeoutTask = it.second
-                timeoutTask.cancel()
+                        val timeoutTask = it.second
+                        timeoutTask.cancel()
 
-                val promise = it.first
-                promise.complete(result)
+                        val promise = it.first
+                        promise.complete(result)
+                    }
+                    ?: let {
+                        log.warn("Ingoring incoming CallResult/CallError as nobody is waiting for it [$chargePointId]")
+                    }
             }
-            ?: let {
-                log.warn("Ingoring incoming CallResult/CallError as no one is waiting for it [$chargePointId]")
-            }
+        }
     }
 
     private suspend fun sendText(text: String) {
