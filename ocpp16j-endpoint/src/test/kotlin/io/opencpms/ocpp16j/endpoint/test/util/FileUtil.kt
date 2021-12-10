@@ -16,17 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package util
+package io.opencpms.ocpp16j.endpoint.test.util
 
-import io.ktor.network.tls.certificates.generateCertificate
 import java.io.File
 
-fun main() {
-    val keyStoreFile = File("build/keystore.jks")
-    generateCertificate(
-        file = keyStoreFile,
-        jksPassword = "bar",
-        keyAlias = "sample",
-        keyPassword = "foo"
-    )
-}
+fun readFileAsText(fileName: String): String = File(fileName).readText(Charsets.UTF_8)

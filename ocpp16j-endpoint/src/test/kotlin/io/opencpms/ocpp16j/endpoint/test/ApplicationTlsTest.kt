@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package itest.io.opencpms.ocpp16j.endpoint
+package io.opencpms.ocpp16j.endpoint.test
 
 import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.webSocket

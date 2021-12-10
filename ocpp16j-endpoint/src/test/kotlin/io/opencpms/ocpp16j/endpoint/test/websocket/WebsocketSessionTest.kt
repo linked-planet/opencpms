@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package itest.io.opencpms.ocpp16j.endpoint.websocket
+package io.opencpms.ocpp16j.endpoint.test.websocket
 
 import arrow.core.left
 import arrow.core.right
@@ -40,7 +40,7 @@ import org.junit.Test
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.singleton
-import util.readFileAsText
+import io.opencpms.ocpp16j.endpoint.test.util.readFileAsText
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
