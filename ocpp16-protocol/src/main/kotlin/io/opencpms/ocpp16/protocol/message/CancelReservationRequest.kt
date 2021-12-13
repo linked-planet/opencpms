@@ -18,19 +18,8 @@
  */
 package io.opencpms.ocpp16.protocol.message
 
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingResponse
-import java.time.OffsetDateTime
+import io.opencpms.ocpp16.protocol.Ocpp16OutgoingRequest
 
-data class BootNotificationResponse(
-    val status: Status,
-    val currentTime: OffsetDateTime,
-    val interval: Long
-) : Ocpp16OutgoingResponse {
-
-    enum class Status {
-        Accepted,
-        Pending,
-        Rejected
-    }
-
-}
+data class CancelReservationRequest(
+    val reservationId: Long
+): Ocpp16OutgoingRequest
