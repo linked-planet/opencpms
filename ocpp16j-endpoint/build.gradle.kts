@@ -2,15 +2,15 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    application
     kotlin("jvm")
+    application
 }
 
 application {
-    mainClass.set("io.opencpms.ocpp16j.endpoint.ApplicationKt")
+    mainClass.set("io.ktor.server.netty.EngineMain")
 }
 
-// Configure itests
+// Configure integration tests
 sourceSets {
     create("integrationTest") {
         java.srcDirs("src/integrationTest/kotlin")
