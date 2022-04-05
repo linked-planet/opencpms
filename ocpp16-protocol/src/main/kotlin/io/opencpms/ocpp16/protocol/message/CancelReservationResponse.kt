@@ -1,6 +1,6 @@
 /**
  * OpenCPMS
- * Copyright (C) 2022 linked-planet GmbH (info@linked-planet.com).
+ * Copyright (C) 2021 linked-planet GmbH (info@linked-planet.com).
  * All Rights Reserved.
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,18 +18,14 @@
  */
 package io.opencpms.ocpp16.protocol.message
 
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingResponse
-import java.time.OffsetDateTime
+import io.opencpms.ocpp16.protocol.Ocpp16IncomingResponse
 
-data class BootNotificationResponse(
-    val status: Status,
-    val currentTime: OffsetDateTime,
-    val interval: Long
-) : Ocpp16OutgoingResponse {
+data class CancelReservationResponse(
+    val status: Status
+): Ocpp16IncomingResponse {
 
     enum class Status {
         Accepted,
-        Pending,
         Rejected
     }
 
