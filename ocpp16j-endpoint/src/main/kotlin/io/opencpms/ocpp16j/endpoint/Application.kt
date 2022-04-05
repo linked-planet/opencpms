@@ -18,67 +18,55 @@
  */
 package io.opencpms.ocpp16j.endpoint
 
-import io.ktor.server.engine.applicationEngineEnvironment
-import io.ktor.server.engine.connector
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.engine.sslConnector
-import io.ktor.server.jetty.Jetty
-import io.ktor.server.jetty.JettyApplicationEngine
+import io.ktor.application.*
+import io.ktor.features.*
+import io.ktor.http.cio.websocket.*
+import io.ktor.routing.*
+import io.ktor.websocket.*
 import io.opencpms.ocpp16.service.auth.Ocpp16AuthServiceImpl
 import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiverImpl
 import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
-import io.opencpms.ocpp16j.endpoint.config.AppConfig
-import io.opencpms.ocpp16j.endpoint.websocket.configureSockets
-import java.security.KeyStore
-import org.kodein.di.DI
-import org.kodein.di.bind
-import org.kodein.di.singleton
+import io.opencpms.ocpp16j.endpoint.websocket.*
+import org.kodein.di.*
+import org.kodein.di.ktor.di
+import java.time.Duration
 
-fun main() {
-    val appConfig = AppConfig()
-    val context = createContext(appConfig)
+private const val OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE = "ocpp1.6"
+private const val WEBSOCKET_PING_PERIOD_SEC = 15L
+private const val WEBSOCKET_TIMEOUT_SEC = 15L
 
-    startServer(appConfig, context)
+
+fun Application.main() {
+    main(DI {
+        bind { singleton { environment.config } }
+        bind { singleton { Ocpp16AuthServiceImpl() } }
+        bind { singleton { Ocpp16SessionManager() } }
+        bind { singleton { Ocpp16MessageReceiverImpl() } }
+    })
 }
 
-fun startServer(appConfig: AppConfig, context: DI, wait: Boolean = true): JettyApplicationEngine {
-    val environment = createApplicationEngineEnvironment(appConfig, context)
-    return embeddedServer(Jetty, environment).start(wait = wait)
-}
+fun Application.main(context: DI) {
+    install(WebSockets) {
+        pingPeriod = Duration.ofSeconds(WEBSOCKET_PING_PERIOD_SEC)
+        timeout = Duration.ofSeconds(WEBSOCKET_TIMEOUT_SEC)
+        maxFrameSize = Long.MAX_VALUE
+        masking = false
+    }
+    install(DefaultHeaders)
+    install(CallLogging)
 
-fun createContext(appConfig: AppConfig): DI = DI {
-    bind { singleton { appConfig } }
-
-    bind { singleton { Ocpp16AuthServiceImpl() } }
-    bind { singleton { Ocpp16SessionManager() } }
-    bind { singleton { Ocpp16MessageReceiverImpl() } }
-}
-
-
-fun createApplicationEngineEnvironment(appConfig: AppConfig, context: DI) = applicationEngineEnvironment {
-    if (appConfig.useTls) {
-        val tlsConfig = appConfig.tlsConfig!!
-        val keyStorePassword = tlsConfig.keyStorePassword.toCharArray()
-        sslConnector(
-            keyStore = KeyStore.getInstance(
-                tlsConfig.keyStoreFile,
-                keyStorePassword
-            ),
-            keyStorePassword = { keyStorePassword },
-            keyAlias = tlsConfig.privateKeyAlias,
-            privateKeyPassword = { tlsConfig.privateKeyPassword.toCharArray() }
-        )
-        {
-            port = appConfig.port
-            host = appConfig.hostname
-            keyStorePath = tlsConfig.keyStoreFile
-        }
-    } else {
-        connector {
-            port = appConfig.port
-            host = appConfig.hostname
-        }
+    di {
+        extend(context)
     }
 
-    module { configureSockets(context) }
+    routing {
+        ocpp16AuthorizedChargePoint {
+            webSocket("/ocpp/16/{chargePointId}", OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE) {
+                ocpp16Session {
+                    handleIncomingMessages()
+                }
+            }
+        }
+    }
 }
+

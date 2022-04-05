@@ -17,7 +17,7 @@ subprojects {
         mavenLocal()
     }
 
-    ext.set("jvmTarget", "1.8")
+    ext.set("jvmTarget", "11")
 
     apply(plugin = "io.gitlab.arturbosch.detekt")
     detekt {

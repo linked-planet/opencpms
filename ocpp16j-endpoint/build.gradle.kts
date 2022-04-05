@@ -51,7 +51,7 @@ dependencies {
     implementation("io.ktor:ktor-websockets:$ktor_version")
     implementation("io.ktor:ktor-auth:$ktor_version")
     implementation("io.ktor:ktor-network-tls-certificates:$ktor_version")
-    implementation("io.ktor:ktor-server-jetty:$ktor_version")
+    implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     testImplementation("io.ktor:ktor-server-tests:$ktor_version")
     testImplementation("io.ktor:ktor-server-test-host:$ktor_version")

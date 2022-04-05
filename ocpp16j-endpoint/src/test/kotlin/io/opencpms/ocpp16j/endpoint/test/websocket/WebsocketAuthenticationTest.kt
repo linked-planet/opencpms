@@ -18,34 +18,16 @@
  */
 package io.opencpms.ocpp16j.endpoint.test.websocket
 
-import arrow.core.left
-import arrow.core.right
-import io.ktor.server.testing.withTestApplication
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.spyk
-import io.mockk.verify
+import arrow.core.*
+import io.mockk.*
 import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
-import io.opencpms.ocpp16j.endpoint.config.AppConfig
-import io.opencpms.ocpp16j.endpoint.websocket.configureSockets
-import org.junit.After
-import org.junit.Test
-import org.kodein.di.DI
-import org.kodein.di.bind
-import org.kodein.di.singleton
-import io.opencpms.ocpp16j.endpoint.test.util.encodeBase64
+import io.opencpms.ocpp16j.endpoint.test.util.*
+import org.junit.*
 import kotlin.test.assertEquals
 
 class WebsocketAuthenticationTest {
 
-    private val appConfig = spyk<AppConfig>()
     private val authService = mockk<Ocpp16AuthService>()
-
-    private val testContext = DI {
-        bind { singleton { appConfig } }
-        bind { singleton { authService } }
-    }
 
     @After
     fun resetAppConfig() {
@@ -54,10 +36,9 @@ class WebsocketAuthenticationTest {
 
     @Test
     fun testAcceptsKnownChargePointId() {
-        every { appConfig.useBasicAuth } returns false
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
-        withTestApplication({ configureSockets(testContext) }) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             val response = handleWebSocket("/ocpp/16/known",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -70,10 +51,9 @@ class WebsocketAuthenticationTest {
 
     @Test
     fun testRefusesUnknownChargePointId() {
-        every { appConfig.useBasicAuth } returns false
         every { authService.authenticateChargePoint(any()) }.returns(Error().left())
 
-        withTestApplication({ configureSockets(testContext) }) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             val response = handleWebSocket("/ocpp/16/unknown",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -86,10 +66,9 @@ class WebsocketAuthenticationTest {
 
     @Test
     fun testAcceptsCorrectBasicAuth() {
-        every { appConfig.useBasicAuth } returns true
         every { authService.authenticateChargePointWithAuthKey(any(), any()) }.returns(Unit.right())
 
-        withTestApplication({ configureSockets(testContext) }) {
+        withTestApplication(basicAuthEnabled = true, authService) {
             val response = handleWebSocket("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -105,10 +84,9 @@ class WebsocketAuthenticationTest {
 
     @Test
     fun testRefusesIncorrectBasicAuth() {
-        every { appConfig.useBasicAuth } returns true
         every { authService.authenticateChargePointWithAuthKey(any(), any()) }.returns(Error().left())
 
-        withTestApplication({ configureSockets(testContext) }) {
+        withTestApplication(basicAuthEnabled = true, authService) {
             val response = handleWebSocket("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")

@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="ocpp16j-endpoint.integrationtest" type="JUnit" factoryName="JUnit">
+    <module name="opencpms.ocpp16j-endpoint.integrationTest" />
+    <option name="PACKAGE_NAME" value="io.opencpms.ocpp16j.endpoint.integrationtest" />
+    <option name="MAIN_CLASS_NAME" value="" />
+    <option name="METHOD_NAME" value="" />
+    <option name="TEST_OBJECT" value="package" />
+    <fork_mode value="method" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

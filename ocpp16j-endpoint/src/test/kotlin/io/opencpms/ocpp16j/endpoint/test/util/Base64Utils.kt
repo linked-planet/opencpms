@@ -18,7 +18,7 @@
  */
 package io.opencpms.ocpp16j.endpoint.test.util
 
-import java.util.Base64
+import java.util.*
 
 fun encodeBase64(str: String): String = Base64.getEncoder().encodeToString(str.toByteArray())
 

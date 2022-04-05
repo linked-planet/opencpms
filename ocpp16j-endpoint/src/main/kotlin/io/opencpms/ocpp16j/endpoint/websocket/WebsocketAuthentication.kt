@@ -18,15 +18,12 @@
  */
 package io.opencpms.ocpp16j.endpoint.websocket
 
-import io.ktor.application.ApplicationCallPipeline
-import io.ktor.application.call
-import io.ktor.auth.basicAuthenticationCredentials
-import io.ktor.routing.Route
-import io.ktor.routing.RouteSelector
-import io.ktor.routing.RouteSelectorEvaluation
-import io.ktor.routing.RoutingResolveContext
+import io.ktor.application.*
+import io.ktor.auth.*
+import io.ktor.config.*
+import io.ktor.routing.*
 import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
-import io.opencpms.ocpp16j.endpoint.config.AppConfig
+import io.opencpms.ocpp16j.endpoint.config.useBasicAuth
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.slf4j.LoggerFactory
@@ -34,7 +31,7 @@ import org.slf4j.LoggerFactory
 private val log = LoggerFactory.getLogger(Route::class.java)
 
 fun Route.ocpp16AuthorizedChargePoint(callback: Route.() -> Unit): Route {
-    val appConfig by closestDI().instance<AppConfig>()
+    val appConfig by closestDI().instance<ApplicationConfig>()
     val authService by closestDI().instance<Ocpp16AuthService>()
 
     // Attach to route
@@ -46,7 +43,7 @@ fun Route.ocpp16AuthorizedChargePoint(callback: Route.() -> Unit): Route {
     // Intercept calls from this route at the call step
     modifiedRoute.intercept(ApplicationCallPipeline.Call) {
         val chargePointId = this.call.parameters["chargePointId"]
-        val basicAuthActivated = appConfig.useBasicAuth
+        val basicAuthActivated = appConfig.useBasicAuth()
 
         log.debug("Requesting authorization [$chargePointId]")
         val isAuthorized = chargePointId
