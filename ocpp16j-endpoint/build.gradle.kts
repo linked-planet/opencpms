@@ -29,49 +29,48 @@ configurations["integrationTestRuntimeOnly"].extendsFrom(configurations.runtimeO
 val jvmTarget: String by project
 
 // Deps
-val ktor_version: String by project
-val kotlin_version: String by project
-val logback_version: String by project
-val arrow_version: String by project
-val gson_version: String by project
-val koin_version: String by project
-val kodein_version: String by project
-val mockk_version: String by project
-val jackson_version: String by project
+val kotlinVersion: String by project
+val ktorVersion: String by project
+val logbackVersion: String by project
+val arrowVersion: String by project
+val gsonVersion: String by project
+val kodeinVersion: String by project
+val jacksonVersion: String by project
+val mockkVersion: String by project
 dependencies {
     implementation(project(":ocpp16-service"))
     implementation(project(":ocpp16-protocol"))
 
     // Kotlin
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlin_version")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
 
     // Ktor
-    implementation("io.ktor:ktor-server-core:$ktor_version")
-    implementation("io.ktor:ktor-websockets:$ktor_version")
-    implementation("io.ktor:ktor-auth:$ktor_version")
-    implementation("io.ktor:ktor-network-tls-certificates:$ktor_version")
-    implementation("io.ktor:ktor-server-netty:$ktor_version")
-    implementation("ch.qos.logback:logback-classic:$logback_version")
-    testImplementation("io.ktor:ktor-server-tests:$ktor_version")
-    testImplementation("io.ktor:ktor-server-test-host:$ktor_version")
-    testImplementation("io.ktor:ktor-client-core:$ktor_version")
-    testImplementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-websockets:$ktorVersion")
+    implementation("io.ktor:ktor-auth:$ktorVersion")
+    implementation("io.ktor:ktor-network-tls-certificates:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-core:$ktorVersion")
+    testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
 
     // Arrow
-    implementation("io.arrow-kt:arrow-core:$arrow_version")
+    implementation("io.arrow-kt:arrow-core:$arrowVersion")
 
     // Gson
-    implementation("com.google.code.gson:gson:$gson_version")
+    implementation("com.google.code.gson:gson:$gsonVersion")
 
     // Kodein
-    implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodein_version")
+    implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodeinVersion")
 
     // Jackson
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jackson_version")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
     // Mockk
-    testImplementation("io.mockk:mockk:$mockk_version")
+    testImplementation("io.mockk:mockk:$mockkVersion")
 
     // Docile-Charge-Point
     integrationTestImplementation("com.infuse-ev:docile-charge-point-loader_2.12:0.6.0")
