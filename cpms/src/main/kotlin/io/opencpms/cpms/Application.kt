@@ -18,11 +18,10 @@
  */
 package io.opencpms.cpms
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.*
 import io.ktor.features.*
 import io.opencpms.ktor.rabbitmq.*
-import io.opencpms.ocpp16.protocol.message.BootNotificationRequest
+import io.opencpms.ocpp16.protocol.*
 import org.kodein.di.*
 import org.kodein.di.ktor.di
 
@@ -47,8 +46,8 @@ fun Application.main(context: DI) {
 
         enableLogging()
 
-        serialize { jacksonObjectMapper().writeValueAsBytes(it) }
-        deserialize { bytes, type -> jacksonObjectMapper().readValue(bytes, type.javaObjectType) }
+        serialize { ocpp16JsonMapper.writeValueAsBytes(it) }
+        deserialize { bytes, type -> ocpp16JsonMapper.readValue(bytes, type.javaObjectType) }
     }
 
     rabbitMq {
@@ -56,7 +55,7 @@ fun Application.main(context: DI) {
             exchangeDeclare("ocpp16_request", "topic", true)
             queueDeclare("ocpp16_request", true, false, false, emptyMap())
             queueBind("ocpp16_request", "ocpp16_request", "ocpp16_request")
-            consume<BootNotificationRequest>(this, "ocpp16_request") { body ->
+            consume<Ocpp16IncomingRequestEnvelope>(this, "ocpp16_request") { body ->
                 println("Consumed message $body")
             }
         }

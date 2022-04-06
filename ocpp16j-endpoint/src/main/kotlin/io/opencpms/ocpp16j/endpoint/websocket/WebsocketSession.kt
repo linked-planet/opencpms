@@ -25,7 +25,7 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
 import io.opencpms.ktor.rabbitmq.*
 import io.opencpms.ocpp16.protocol.*
-import io.opencpms.ocpp16.protocol.message.*
+import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
 import io.opencpms.ocpp16j.endpoint.json.*
 import io.opencpms.ocpp16j.endpoint.protocol.*
 import io.opencpms.ocpp16j.endpoint.session.*
@@ -143,7 +143,7 @@ class WebsocketSession(
                 "ocpp16_request_publish",
                 "ocpp16_request",
                 "ocpp16_request",
-                message
+                Ocpp16IncomingRequestEnvelope(message.uniqueId, message.actionName, message.payload)
             )
         }
         // TODO response from rabbit

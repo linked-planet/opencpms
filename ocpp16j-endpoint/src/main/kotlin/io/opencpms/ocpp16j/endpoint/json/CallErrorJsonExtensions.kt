@@ -18,16 +18,10 @@
  */
 package io.opencpms.ocpp16j.endpoint.json
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
-import io.opencpms.ocpp16.protocol.Ocpp16Error
-import io.opencpms.ocpp16j.endpoint.protocol.CALL_ERROR_MESSAGE_TYPE_ID
-import io.opencpms.ocpp16j.endpoint.protocol.CallError
-import io.opencpms.ocpp16j.endpoint.protocol.GenericError
-import io.opencpms.ocpp16j.endpoint.protocol.Ocpp16ErrorCode
+import arrow.core.*
+import com.google.gson.*
+import io.opencpms.ocpp16.protocol.*
+import io.opencpms.ocpp16j.endpoint.protocol.*
 import io.opencpms.ocpp16j.endpoint.util.GSON
 
 private const val MESSAGE_TYPE_ID_INDEX = 0

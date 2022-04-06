@@ -18,22 +18,13 @@
  */
 package io.opencpms.ocpp16j.endpoint.json
 
-import arrow.core.Either
+import arrow.core.*
 import arrow.core.computations.either
-import arrow.core.left
-import arrow.core.right
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException
 import com.google.gson.JsonArray
-import io.opencpms.ocpp16.protocol.IncomingMessageClassLoader
-import io.opencpms.ocpp16.protocol.Ocpp16Error
-import io.opencpms.ocpp16j.endpoint.protocol.CALL_MESSAGE_TYPE_ID
-import io.opencpms.ocpp16j.endpoint.protocol.FormationViolation
-import io.opencpms.ocpp16j.endpoint.protocol.GenericError
-import io.opencpms.ocpp16j.endpoint.protocol.IncomingCall
-import io.opencpms.ocpp16j.endpoint.protocol.OutgoingCall
-import io.opencpms.ocpp16j.endpoint.protocol.PropertyConstraintViolation
+import io.opencpms.ocpp16.protocol.*
+import io.opencpms.ocpp16j.endpoint.protocol.*
 import io.opencpms.ocpp16j.endpoint.util.GSON
-import io.opencpms.ocpp16j.endpoint.util.JACKSON
 
 private const val MESSAGE_TYPE_ID_INDEX = 0
 private const val UNIQUE_ID_INDEX = 1
@@ -84,7 +75,7 @@ private fun parseAction(raw: RawIncomingCall): Either<Ocpp16Error, IncomingCall>
     val actionClass = IncomingMessageClassLoader.loadOcpp16IncomingRequestClass(actionName)
 
     // Use special jackson parser for action as gson doesn't call init block during class initialization
-    val action = JACKSON.readValue(raw.payload, actionClass)
+    val action = ocpp16JsonMapper.readValue(raw.payload, actionClass)
 
     IncomingCall(raw.uniqueId, actionName, action, raw.messageTypeId).right()
 } catch (e: Exception) {

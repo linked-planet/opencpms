@@ -12,8 +12,10 @@ buildscript {
     }
 }
 
+val jacksonVersion: String by project
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", jacksonVersion)
 }
 
 // Disable static code analysis for generated classes

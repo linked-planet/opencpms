@@ -18,14 +18,15 @@
  */
 package io.opencpms.ocpp16j.endpoint.protocol
 
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingRequest
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingRequest
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+import io.opencpms.ocpp16.protocol.*
 
 const val CALL_MESSAGE_TYPE_ID = 2
 
 data class IncomingCall(
     override val uniqueId: String,
     val actionName: String,
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "actionName")
     val payload: Ocpp16IncomingRequest,
     val messageTypeId: Int
 ) : WebsocketMessage {
@@ -35,7 +36,8 @@ data class IncomingCall(
 data class OutgoingCall(
     override val uniqueId: String,
     val actionName: String,
-    val payload: Ocpp16OutgoingRequest,
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "actionName")
+    val payload: Ocpp16OutgoingRequest
 ) : WebsocketMessage {
     val messageTypeId = CALL_RESULT_MESSAGE_TYPE_ID
 }

@@ -44,7 +44,45 @@ class ProtocolError(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = nu
 
 class SecurityError(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
     uniqueId,
-    "During the processing of Action a security issue occurred " +
+    "During the processing of Action a security issue occurred, " +
             "preventing receiver from completing the Action successfully",
+    details
+)
+
+class NotImplemented(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
+    "Requested Action is not known by receiver",
+    details
+)
+
+class FormationViolation(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
+    "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
+    details
+)
+
+class PropertyConstraintViolation(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
+    "Payload is syntactically correct but at least one field contains an invalid value",
+    details
+)
+
+class OccurrenceConstraintViolation(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
+    "Payload for Action is syntactically correct but at least one of the fields violates" +
+            " occurrence constraints",
+    details
+)
+
+class TypeConstraintViolation(uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
+    "Payload for Action is syntactically correct but at least one of the fields violates" +
+            " data type constraints (e.g. “somestring”: 12)",
+    details
+)
+
+class GenericError(reason: String, uniqueId: String? = UNKNOWN_UNIQUE_ID, details: String? = null) : Ocpp16Error(
+    uniqueId,
+    reason,
     details
 )

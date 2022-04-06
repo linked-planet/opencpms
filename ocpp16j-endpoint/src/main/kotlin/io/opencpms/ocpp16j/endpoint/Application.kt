@@ -24,9 +24,9 @@ import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
 import io.opencpms.ktor.rabbitmq.*
+import io.opencpms.ocpp16.protocol.ocpp16JsonMapper
 import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthServiceImpl
 import io.opencpms.ocpp16j.endpoint.session.Ocpp16SessionManager
-import io.opencpms.ocpp16j.endpoint.util.JACKSON
 import io.opencpms.ocpp16j.endpoint.websocket.*
 import org.kodein.di.*
 import org.kodein.di.ktor.di
@@ -66,8 +66,8 @@ fun Application.main(context: DI) {
 
         enableLogging()
 
-        serialize { JACKSON.writeValueAsBytes(it) }
-        deserialize { bytes, type -> JACKSON.readValue(bytes, type.javaObjectType) }
+        serialize { ocpp16JsonMapper.writeValueAsBytes(it) }
+        deserialize { bytes, type -> ocpp16JsonMapper.readValue(bytes, type.javaObjectType) }
     }
 
     rabbitMq {

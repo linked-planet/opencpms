@@ -18,11 +18,7 @@
  */
 package io.opencpms.ocpp16j.endpoint.protocol
 
-import io.opencpms.ocpp16.protocol.InternalError
-import io.opencpms.ocpp16.protocol.NotSupportedError
-import io.opencpms.ocpp16.protocol.Ocpp16Error
-import io.opencpms.ocpp16.protocol.ProtocolError
-import io.opencpms.ocpp16.protocol.SecurityError
+import io.opencpms.ocpp16.protocol.*
 
 fun Ocpp16Error.toCallError(): CallError {
     val errorCode = when (this) {
@@ -32,7 +28,7 @@ fun Ocpp16Error.toCallError(): CallError {
         is SecurityError -> Ocpp16ErrorCode.SecurityError
         is FormationViolation -> Ocpp16ErrorCode.FormationViolation
         is PropertyConstraintViolation -> Ocpp16ErrorCode.PropertyConstraintViolation
-        is OccurenceConstraintViolation -> Ocpp16ErrorCode.OccurenceConstraintViolation
+        is OccurrenceConstraintViolation -> Ocpp16ErrorCode.OccurenceConstraintViolation
         is TypeConstraintViolation -> Ocpp16ErrorCode.TypeConstraintViolation
         is GenericError -> Ocpp16ErrorCode.GenericError
         else -> {
@@ -50,7 +46,7 @@ fun CallError.toOcpp16Error(): Ocpp16Error {
         Ocpp16ErrorCode.SecurityError -> SecurityError(uniqueId, errorDetails)
         Ocpp16ErrorCode.FormationViolation -> FormationViolation(uniqueId, errorDetails)
         Ocpp16ErrorCode.PropertyConstraintViolation -> PropertyConstraintViolation(uniqueId, errorDetails)
-        Ocpp16ErrorCode.OccurenceConstraintViolation -> OccurenceConstraintViolation(uniqueId, errorDetails)
+        Ocpp16ErrorCode.OccurenceConstraintViolation -> OccurrenceConstraintViolation(uniqueId, errorDetails)
         Ocpp16ErrorCode.TypeConstraintViolation -> TypeConstraintViolation(uniqueId, errorDetails)
         Ocpp16ErrorCode.GenericError -> GenericError(errorDescription, uniqueId, errorDetails)
         else -> {
