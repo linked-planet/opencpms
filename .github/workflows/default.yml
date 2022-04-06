@@ -1,4 +1,4 @@
-name: master - OpenCPMS
+name: default
 
 on: [ push ]
 
