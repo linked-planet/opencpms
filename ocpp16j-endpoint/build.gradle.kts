@@ -79,7 +79,7 @@ dependencies {
 // Tasks
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions.jvmTarget = jvmTarget
-    kotlinOptions.freeCompilerArgs = listOf("-Xuse-experimental=kotlin.Experimental")
+    kotlinOptions.freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
 }
 
 tasks {
