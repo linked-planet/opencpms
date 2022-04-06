@@ -84,9 +84,9 @@ val kodeinVersion: String by project
 val jacksonVersion: String by project
 val mockkVersion: String by project
 dependencies {
+    implementation(project(":ktor-rabbitmq"))
     implementation(project(":ocpp16-protocol"))
 
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-websockets:$ktorVersion")
     implementation("io.ktor:ktor-auth:$ktorVersion")
     implementation("io.ktor:ktor-network-tls-certificates:$ktorVersion")
@@ -99,8 +99,6 @@ dependencies {
     implementation("org.apache.logging.log4j", "log4j-core", log4jVersion)
     implementation("org.apache.logging.log4j", "log4j-slf4j-impl", log4jVersion)
     implementation("com.lmax", "disruptor", "3.4.2")
-    implementation("com.github.JUtupe", "ktor-rabbitmq", "0.3.0")
-    implementation("com.rabbitmq", "amqp-client", "5.9.0")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")

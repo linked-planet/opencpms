@@ -21,10 +21,10 @@ package io.opencpms.cpms
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.*
 import io.ktor.features.*
+import io.opencpms.ktor.rabbitmq.*
 import io.opencpms.ocpp16.protocol.message.BootNotificationRequest
 import org.kodein.di.*
 import org.kodein.di.ktor.di
-import pl.jutupe.ktor_rabbitmq.*
 
 
 fun Application.main() {

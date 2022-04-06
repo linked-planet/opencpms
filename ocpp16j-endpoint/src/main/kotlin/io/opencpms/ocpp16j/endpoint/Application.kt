@@ -18,19 +18,18 @@
  */
 package io.opencpms.ocpp16j.endpoint
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
+import io.opencpms.ktor.rabbitmq.RabbitMQ
 import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthServiceImpl
 import io.opencpms.ocpp16j.endpoint.session.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.util.JACKSON
 import io.opencpms.ocpp16j.endpoint.websocket.*
 import org.kodein.di.*
 import org.kodein.di.ktor.di
-import pl.jutupe.ktor_rabbitmq.RabbitMQ
 import java.time.Duration
 
 private const val OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE = "ocpp1.6"

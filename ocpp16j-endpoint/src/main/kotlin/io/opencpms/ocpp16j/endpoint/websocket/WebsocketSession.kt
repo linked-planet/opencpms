@@ -34,7 +34,7 @@ import kotlinx.coroutines.sync.Mutex
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.slf4j.LoggerFactory
-import pl.jutupe.ktor_rabbitmq.publish
+import io.opencpms.ktor.rabbitmq.publish
 import java.time.OffsetDateTime
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -148,7 +148,7 @@ class WebsocketSession(
                 // Send message in background
                 withTimeout(REQUEST_TIMEOUT_MS) {
                     outgoingMessagesLock.lock()
-                    val call = OutgoingCall(uniqueId, message.getActionName(), message)
+                    val call = OutgoingCall(uniqueId, message.findActionName(), message)
                     sendText(call.serialize())
                 }
             }.invokeOnCompletion { error ->

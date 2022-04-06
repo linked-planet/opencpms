@@ -23,11 +23,11 @@ private const val OCPP16_REQUEST_SUFFIX = "Request"
 private const val OCPP16_RESPONSE_SUFFIX = "Response"
 
 interface Ocpp16Request {
-    fun getActionName() = this.javaClass.name.removeSuffix(OCPP16_REQUEST_SUFFIX)
+    fun findActionName() = this.javaClass.name.removeSuffix(OCPP16_REQUEST_SUFFIX)
 }
 
 interface Ocpp16Response {
-    fun getActionName(): String = this.javaClass.name.removeSuffix(OCPP16_RESPONSE_SUFFIX)
+    fun findActionName(): String = this.javaClass.name.removeSuffix(OCPP16_RESPONSE_SUFFIX)
 }
 
 /**

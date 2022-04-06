@@ -1,4 +1,5 @@
 rootProject.name = "opencpms"
+include("ktor-rabbitmq")
 include("ocpp16-protocol")
 include("ocpp16j-endpoint")
 include("cpms")
