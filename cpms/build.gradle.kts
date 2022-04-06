@@ -43,10 +43,8 @@ val kotlinVersion: String by project
 val ktorVersion: String by project
 val log4jVersion: String by project
 val arrowVersion: String by project
-val gsonVersion: String by project
 val kodeinVersion: String by project
 val jacksonVersion: String by project
-val mockkVersion: String by project
 dependencies {
     implementation(project(":ktor-rabbitmq"))
     implementation(project(":ocpp16-protocol"))

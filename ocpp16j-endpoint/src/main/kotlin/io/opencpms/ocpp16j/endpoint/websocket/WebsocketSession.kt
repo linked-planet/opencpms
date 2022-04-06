@@ -143,7 +143,7 @@ class WebsocketSession(
                 "ocpp16_request_publish",
                 "ocpp16_request",
                 "ocpp16_request",
-                (message.payload as BootNotificationRequest)
+                message
             )
         }
         // TODO response from rabbit
