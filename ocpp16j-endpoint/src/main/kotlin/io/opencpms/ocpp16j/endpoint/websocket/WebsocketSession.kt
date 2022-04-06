@@ -196,7 +196,7 @@ class WebsocketSession(
             "boot_notification",
             "boot_notification",
             null,
-            (message.payload as BootNotificationRequest).toString()
+            (message.payload as BootNotificationRequest)
         )
         // TODO response from rabbit
         val response = BootNotificationResponse(BootNotificationResponse.Status.Accepted, OffsetDateTime.now(), 10L)

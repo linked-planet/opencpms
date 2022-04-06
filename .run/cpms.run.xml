@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ocpp16j-endpoint" type="JetRunConfigurationType">
+  <configuration default="false" name="cpms" type="JetRunConfigurationType">
     <option name="MAIN_CLASS_NAME" value="io.ktor.server.netty.EngineMain" />
-    <module name="opencpms.ocpp16j-endpoint.main" />
+    <module name="opencpms.cpms.main" />
     <shortenClasspath name="NONE" />
     <method v="2">
       <option name="Make" enabled="true" />

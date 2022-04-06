@@ -16,43 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16j.endpoint
+package io.opencpms.cpms
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.*
 import io.ktor.features.*
-import io.ktor.http.cio.websocket.*
-import io.ktor.routing.*
-import io.ktor.websocket.*
-import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthServiceImpl
-import io.opencpms.ocpp16j.endpoint.session.Ocpp16SessionManager
-import io.opencpms.ocpp16j.endpoint.util.JACKSON
-import io.opencpms.ocpp16j.endpoint.websocket.*
+import io.opencpms.ocpp16.protocol.message.BootNotificationRequest
 import org.kodein.di.*
 import org.kodein.di.ktor.di
-import pl.jutupe.ktor_rabbitmq.RabbitMQ
-import java.time.Duration
-
-private const val OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE = "ocpp1.6"
-private const val WEBSOCKET_PING_PERIOD_SEC = 15L
-private const val WEBSOCKET_TIMEOUT_SEC = 15L
+import pl.jutupe.ktor_rabbitmq.*
 
 
 fun Application.main() {
     main(DI {
         bind { singleton { environment.config } }
-        bind { singleton { Ocpp16AuthServiceImpl() } }
-        bind { singleton { Ocpp16SessionManager() } }
     })
 }
 
 fun Application.main(context: DI) {
-    install(WebSockets) {
-        pingPeriod = Duration.ofSeconds(WEBSOCKET_PING_PERIOD_SEC)
-        timeout = Duration.ofSeconds(WEBSOCKET_TIMEOUT_SEC)
-        maxFrameSize = Long.MAX_VALUE
-        masking = false
-    }
     install(DefaultHeaders)
     install(CallLogging)
 
@@ -62,13 +43,9 @@ fun Application.main(context: DI) {
 
     rabbit()
 
-    routing {
-        ocpp16AuthorizedChargePoint {
-            webSocket("/ocpp/16/{chargePointId}", OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE) {
-                ocpp16Session {
-                    call.handleIncomingMessages()
-                }
-            }
+    rabbitConsumer {
+        consume<BootNotificationRequest>("boot_notification") { body ->
+            println("Consumed message $body")
         }
     }
 }
@@ -76,12 +53,12 @@ fun Application.main(context: DI) {
 private fun Application.rabbit() {
     install(RabbitMQ) {
         uri = "amqp://guest:guest@localhost:5672"
-        connectionName = "ocpp16j-endpoint"
+        connectionName = "cpms"
 
         enableLogging()
 
-        serialize { JACKSON.writeValueAsBytes(it) }
-        deserialize { bytes, type -> JACKSON.readValue(bytes, type.javaObjectType) }
+        serialize { jacksonObjectMapper().writeValueAsBytes(it) }
+        deserialize { bytes, type -> jacksonObjectMapper().readValue(bytes, type.javaObjectType) }
 
         initialize {
             exchangeDeclare(
