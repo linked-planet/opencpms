@@ -23,7 +23,7 @@ import io.ktor.features.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
-import io.opencpms.ktor.rabbitmq.RabbitMQ
+import io.opencpms.ktor.rabbitmq.*
 import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthServiceImpl
 import io.opencpms.ocpp16j.endpoint.session.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.util.JACKSON
@@ -33,8 +33,8 @@ import org.kodein.di.ktor.di
 import java.time.Duration
 
 private const val OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE = "ocpp1.6"
-private const val WEBSOCKET_PING_PERIOD_SEC = 15L
-private const val WEBSOCKET_TIMEOUT_SEC = 15L
+private const val WEBSOCKET_PING_PERIOD_SECONDS = 15L
+private const val WEBSOCKET_TIMEOUT_SECONDS = 15L
 
 
 fun Application.main() {
@@ -46,33 +46,20 @@ fun Application.main() {
 }
 
 fun Application.main(context: DI) {
-    install(WebSockets) {
-        pingPeriod = Duration.ofSeconds(WEBSOCKET_PING_PERIOD_SEC)
-        timeout = Duration.ofSeconds(WEBSOCKET_TIMEOUT_SEC)
-        maxFrameSize = Long.MAX_VALUE
-        masking = false
-    }
-    install(DefaultHeaders)
-    install(CallLogging)
-
     di {
         extend(context)
     }
 
-    rabbit()
+    install(DefaultHeaders)
+    install(CallLogging)
 
-    routing {
-        ocpp16AuthorizedChargePoint {
-            webSocket("/ocpp/16/{chargePointId}", OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE) {
-                ocpp16Session {
-                    call.handleIncomingMessages()
-                }
-            }
-        }
+    install(WebSockets) {
+        pingPeriod = Duration.ofSeconds(WEBSOCKET_PING_PERIOD_SECONDS)
+        timeout = Duration.ofSeconds(WEBSOCKET_TIMEOUT_SECONDS)
+        maxFrameSize = Long.MAX_VALUE
+        masking = false
     }
-}
 
-private fun Application.rabbit() {
     install(RabbitMQ) {
         uri = "amqp://guest:guest@localhost:5672"
         connectionName = "ocpp16j-endpoint"
@@ -81,25 +68,24 @@ private fun Application.rabbit() {
 
         serialize { JACKSON.writeValueAsBytes(it) }
         deserialize { bytes, type -> JACKSON.readValue(bytes, type.javaObjectType) }
+    }
 
-        initialize {
-            exchangeDeclare(
-                "boot_notification",
-                "topic",
-                false
-            )
-            queueDeclare(
-                "boot_notification",
-                false,
-                false,
-                false,
-                emptyMap()
-            )
-            queueBind(
-                "boot_notification",
-                "boot_notification",
-                "boot_notification"
-            )
+    rabbitMq {
+        newChannel("ocpp16_request_publish") {
+            exchangeDeclare("ocpp16_request", "topic", true)
+            queueDeclare("ocpp16_request", true, false, false, emptyMap())
+            queueBind("ocpp16_request", "ocpp16_request", "ocpp16_request")
         }
     }
+
+    routing {
+        ocpp16AuthorizedChargePoint {
+            webSocket("/ocpp/16/{chargePointId}", OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE) {
+                ocpp16Session {
+                    application.handleIncomingMessages()
+                }
+            }
+        }
+    }
+
 }

@@ -23,6 +23,7 @@ import io.ktor.application.*
 import io.ktor.http.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.websocket.*
+import io.opencpms.ktor.rabbitmq.*
 import io.opencpms.ocpp16.protocol.*
 import io.opencpms.ocpp16.protocol.message.*
 import io.opencpms.ocpp16j.endpoint.json.*
@@ -34,7 +35,6 @@ import kotlinx.coroutines.sync.Mutex
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.slf4j.LoggerFactory
-import io.opencpms.ktor.rabbitmq.publish
 import java.time.OffsetDateTime
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -85,7 +85,7 @@ class WebsocketSession(
     private val pendingIncomingCallResponses =
         ConcurrentHashMap<String, Pair<CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>>, Job>>()
 
-    suspend fun ApplicationCall.handleIncomingMessages() {
+    suspend fun Application.handleIncomingMessages() {
         for (frame in session.incoming) {
             when (frame) {
                 is Frame.Text -> {
@@ -135,6 +135,31 @@ class WebsocketSession(
                 }
             }
         }
+    }
+
+    private suspend fun Application.handleIncomingCall(message: IncomingCall) {
+        rabbitMq {
+            publish(
+                "ocpp16_request_publish",
+                "ocpp16_request",
+                "ocpp16_request",
+                (message.payload as BootNotificationRequest)
+            )
+        }
+        // TODO response from rabbit
+        val response = BootNotificationResponse(BootNotificationResponse.Status.Accepted, OffsetDateTime.now(), 10L)
+        val callResponse = OutgoingCallResult(message.uniqueId, response).serialize()
+//        val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
+//            .fold(
+//                {
+//                    it.toCallError().serialize()
+//                },
+//                {
+//                    OutgoingCallResult(message.uniqueId, it).serialize()
+//                }
+//            )
+
+        sendText(callResponse)
     }
 
     suspend fun sendOutgoingCall(message: Ocpp16OutgoingRequest):
@@ -189,29 +214,6 @@ class WebsocketSession(
         }
 
         log.debug("Session closed  [$chargePointId]")
-    }
-
-    private suspend fun ApplicationCall.handleIncomingCall(message: IncomingCall) {
-        publish(
-            "boot_notification",
-            "boot_notification",
-            null,
-            (message.payload as BootNotificationRequest)
-        )
-        // TODO response from rabbit
-        val response = BootNotificationResponse(BootNotificationResponse.Status.Accepted, OffsetDateTime.now(), 10L)
-        val callResponse = OutgoingCallResult(message.uniqueId, response).serialize()
-//        val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
-//            .fold(
-//                {
-//                    it.toCallError().serialize()
-//                },
-//                {
-//                    OutgoingCallResult(message.uniqueId, it).serialize()
-//                }
-//            )
-
-        sendText(callResponse)
     }
 
     private fun handleIncomingCallResponse(

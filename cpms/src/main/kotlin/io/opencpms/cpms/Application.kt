@@ -34,23 +34,13 @@ fun Application.main() {
 }
 
 fun Application.main(context: DI) {
-    install(DefaultHeaders)
-    install(CallLogging)
-
     di {
         extend(context)
     }
 
-    rabbit()
+    install(DefaultHeaders)
+    install(CallLogging)
 
-    rabbitConsumer {
-        consume<BootNotificationRequest>("boot_notification") { body ->
-            println("Consumed message $body")
-        }
-    }
-}
-
-private fun Application.rabbit() {
     install(RabbitMQ) {
         uri = "amqp://guest:guest@localhost:5672"
         connectionName = "cpms"
@@ -59,25 +49,16 @@ private fun Application.rabbit() {
 
         serialize { jacksonObjectMapper().writeValueAsBytes(it) }
         deserialize { bytes, type -> jacksonObjectMapper().readValue(bytes, type.javaObjectType) }
+    }
 
-        initialize {
-            exchangeDeclare(
-                "boot_notification",
-                "topic",
-                false
-            )
-            queueDeclare(
-                "boot_notification",
-                false,
-                false,
-                false,
-                emptyMap()
-            )
-            queueBind(
-                "boot_notification",
-                "boot_notification",
-                "boot_notification"
-            )
+    rabbitMq {
+        newChannel("ocpp16_request_consume") {
+            exchangeDeclare("ocpp16_request", "topic", true)
+            queueDeclare("ocpp16_request", true, false, false, emptyMap())
+            queueBind("ocpp16_request", "ocpp16_request", "ocpp16_request")
+            consume<BootNotificationRequest>(this, "ocpp16_request") { body ->
+                println("Consumed message $body")
+            }
         }
     }
 }

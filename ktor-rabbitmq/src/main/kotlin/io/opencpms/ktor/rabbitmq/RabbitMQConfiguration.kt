@@ -1,8 +1,24 @@
+/**
+ * OpenCPMS
+ * Copyright (C) 2022 linked-planet GmbH (info@linked-planet.com).
+ * All Rights Reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 package io.opencpms.ktor.rabbitmq
 
-import com.rabbitmq.client.Channel
-import io.ktor.application.Application
-import io.ktor.application.log
+import io.ktor.application.*
 import org.slf4j.Logger
 import kotlin.reflect.KClass
 
@@ -14,9 +30,7 @@ class RabbitMQConfiguration private constructor() {
     var logger: Logger? = null
         private set
 
-    internal lateinit var initializeBlock: (Channel.() -> Unit)
-
-    lateinit var serializeBlock:  (Any) -> ByteArray
+    lateinit var serializeBlock: (Any) -> ByteArray
     lateinit var deserializeBlock: (ByteArray, KClass<*>) -> Any
 
     /**
@@ -24,14 +38,6 @@ class RabbitMQConfiguration private constructor() {
      */
     fun Application.enableLogging() {
         logger = log
-    }
-
-    /**
-     * @param [block] invoked with [Channel] in order to initialize rabbit
-     * (create exchange, queue, etc.)
-     */
-    fun initialize(block: (Channel.() -> Unit)) {
-        initializeBlock = block
     }
 
     /**
@@ -53,4 +59,5 @@ class RabbitMQConfiguration private constructor() {
             return RabbitMQConfiguration()
         }
     }
+
 }
