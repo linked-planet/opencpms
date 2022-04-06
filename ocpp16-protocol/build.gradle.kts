@@ -8,7 +8,7 @@ plugins {
 
 buildscript {
     dependencies {
-        classpath("net.pwall.json:json-kotlin-schema-codegen:0.63")
+        classpath("net.pwall.json:json-kotlin-schema-codegen:0.73")
     }
 }
 

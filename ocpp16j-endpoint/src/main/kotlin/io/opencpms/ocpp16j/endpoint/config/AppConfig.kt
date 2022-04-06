@@ -18,34 +18,10 @@
  */
 package io.opencpms.ocpp16j.endpoint.config
 
-import com.typesafe.config.ConfigFactory
-import java.io.File
+import io.ktor.config.*
 
-class AppConfig {
-    private val appConfigBlock = ConfigFactory.load().getConfig("app")
-    val hostname: String = appConfigBlock.getString("hostname")
-    val port: Int = appConfigBlock.getInt("port")
+fun ApplicationConfig.useBasicAuth(): Boolean =
+    basicAuthConfigBlock()
+        .property("enabled").getString().toBoolean()
 
-    private val basicAuthConfigBlock = appConfigBlock.getConfig("basicAuth")
-    val useBasicAuth = basicAuthConfigBlock.getBoolean("enabled")
-
-    private val tlsConfigBlock = appConfigBlock.getConfig("tls")
-    val useTls: Boolean = tlsConfigBlock.getBoolean("enabled")
-    val tlsConfig: TlsConfig? = if (useTls) {
-        val keyStoreFile: File = tlsConfigBlock.getString("keyStorePath")
-            ?.let { File(it) }
-            ?.takeIf { it.exists() && it.isFile }
-            ?: throw IllegalArgumentException("Specified keystore not existing")
-        val keyStorePassword: String = tlsConfigBlock.getString("keyStorePassword")
-        val privateKeyAlias: String = tlsConfigBlock.getString("privateKeyAlias")
-        val privateKeyPassword: String = tlsConfigBlock.getString("privateKeyPassword")
-        TlsConfig(keyStoreFile, keyStorePassword, privateKeyAlias, privateKeyPassword)
-    } else null
-
-    data class TlsConfig(
-        val keyStoreFile: File,
-        val keyStorePassword: String,
-        val privateKeyAlias: String,
-        val privateKeyPassword: String
-    )
-}
+private fun ApplicationConfig.basicAuthConfigBlock(): ApplicationConfig = config("basicAuth")

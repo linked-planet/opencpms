@@ -19,17 +19,23 @@
 package io.opencpms.ocpp16j.endpoint.integrationtest
 
 import chargepoint.docile.test.`TestPassed$`
-import io.opencpms.ocpp16j.endpoint.integrationtest.util.BaseIntegrationTest
 import org.junit.Test
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class BootNotificationIntegrationTest : BaseIntegrationTest() {
 
     @Test
-    fun `test BootNotification`() {
+    fun testBootNotification() {
         val status = runChargePointIntegrationTest("BootNotification", "bootNotification()")
         assertNotNull(status)
         assertTrue(status is `TestPassed$`, "Test did not pass")
     }
+
+    @Test
+    fun testBootNotification2() {
+        val status = runChargePointIntegrationTest("BootNotification2", "bootNotification()")
+        assertNotNull(status)
+        assertTrue(status is `TestPassed$`, "Test did not pass")
+    }
+
 }

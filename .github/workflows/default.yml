@@ -1,4 +1,4 @@
-name: master - OpenCPMS
+name: default
 
 on: [ push ]
 
@@ -39,5 +39,6 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
-      - name: Run integration tests
-        run: ./gradlew integrationTest
+        # TODO need to start the app e.g. via docker before
+#      - name: Run integration tests
+#        run: ./gradlew integrationTest

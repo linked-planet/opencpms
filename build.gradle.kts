@@ -1,8 +1,10 @@
-import java.util.Calendar
+println("Gradle Version: " + GradleVersion.current().toString())
+println("Java Version: " + JavaVersion.current().toString())
 
 plugins {
     kotlin("jvm") apply false
     id("com.github.hierynomus.license")
+    id("com.github.ben-manes.versions")
     id("io.gitlab.arturbosch.detekt")
 }
 
@@ -17,7 +19,8 @@ subprojects {
         mavenLocal()
     }
 
-    ext.set("jvmTarget", "1.8")
+    val jvmTarget: String by project
+    ext.set("jvmTarget", jvmTarget)
 
     apply(plugin = "io.gitlab.arturbosch.detekt")
     detekt {
@@ -32,7 +35,7 @@ subprojects {
         exclude("**/*.properties")
         exclude("**/*.json")
 
-        ext["year"] = Calendar.getInstance().get(Calendar.YEAR)
+        ext["year"] = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
         ext["owner"] = "linked-planet GmbH"
         ext["email"] = "info@linked-planet.com"
     }

@@ -19,33 +19,17 @@
 package io.opencpms.ocpp16j.endpoint.test.websocket
 
 import arrow.core.right
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.testing.handleRequest
-import io.ktor.server.testing.withTestApplication
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.spyk
+import io.ktor.http.*
+import io.ktor.server.testing.*
+import io.mockk.*
 import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
-import io.opencpms.ocpp16j.endpoint.config.AppConfig
-import io.opencpms.ocpp16j.endpoint.websocket.configureSockets
-import org.junit.After
-import org.junit.Test
-import org.kodein.di.DI
-import org.kodein.di.bind
-import org.kodein.di.singleton
+import io.opencpms.ocpp16j.endpoint.test.util.withTestApplication
+import org.junit.*
 import kotlin.test.assertEquals
 
 class WebsocketEndpointTest {
 
-    private val appConfig = spyk<AppConfig>()
     private val authService = mockk<Ocpp16AuthService>()
-
-    private val testContext = DI {
-        bind { singleton { appConfig } }
-        bind { singleton { authService } }
-    }
 
     @After
     fun resetAppConfig() {
@@ -56,7 +40,7 @@ class WebsocketEndpointTest {
     fun testWebsocketAcceptsOcpp16() {
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
-        withTestApplication({ configureSockets(testContext) }) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             val response = handleWebSocket("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -69,7 +53,7 @@ class WebsocketEndpointTest {
     fun testWebsocketAcceptsOcpp16OutOfMultipleProtocols() {
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
-        withTestApplication({ configureSockets(testContext) }) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             val response = handleWebSocket("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6,ocpp1.5")
@@ -81,15 +65,15 @@ class WebsocketEndpointTest {
 
     /**
      * Deviation to OCPP1.6 - should be:
-     * If the Central System does not agree to using one of the subprotocols offered by the client, it MUST complete the
-     * WebSocket handshake with a response without a Sec-WebSocket-Protocol header and then immediately close the
+     * If the Central System does not agree to using one of the sub protocols offered by the client, it MUST complete
+     * the WebSocket handshake with a response without a Sec-WebSocket-Protocol header and then immediately close the
      * WebSocket connection.
      *
      * BUT: this is default behaviour of ktor
      */
     @Test
     fun testWebsocketDeniesOtherProtocolsThanOcpp16() {
-        withTestApplication({ configureSockets(testContext) }) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             val response = handleWebSocket("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "karl")
@@ -100,15 +84,15 @@ class WebsocketEndpointTest {
 
     /**
      * Deviation to OCPP1.6 - should be:
-     * If the Central System does not agree to using one of the subprotocols offered by the client, it MUST complete the
-     * WebSocket handshake with a response without a Sec-WebSocket-Protocol header and then immediately close the
+     * If the Central System does not agree to using one of the sub protocols offered by the client, it MUST complete
+     * the WebSocket handshake with a response without a Sec-WebSocket-Protocol header and then immediately close the
      * WebSocket connection.
      *
      * BUT: this is default behaviour of ktor
      */
     @Test
     fun testWebsocketDeniesNoProtocol() {
-        withTestApplication({ configureSockets(testContext) }) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             val response = handleWebSocket("/ocpp/16/test", setup = {}).response
             assertEquals("404 Not Found", response.status().toString())
         }
@@ -116,7 +100,7 @@ class WebsocketEndpointTest {
 
     @Test
     fun testRespondsNotFoundForPlainHttpRequest() {
-        withTestApplication({ configureSockets(testContext) }) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             handleRequest(HttpMethod.Get, "/ocpp/16/test").apply {
                 assertEquals(HttpStatusCode.NotFound, response.status())
             }

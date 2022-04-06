@@ -1,5 +1,4 @@
 # OpenCPMS
 
-[![master - OpenCPMS](https://github.com/linked-planet/opencpms/actions/workflows/opencpms.yml/badge.svg)](https://github.com/linked-planet/opencpms/actions/workflows/opencpms.yml)
+[![default](https://github.com/linked-planet/opencpms/actions/workflows/default.yml/badge.svg)](https://github.com/linked-planet/opencpms/actions/workflows/default.yml)
 
-Description coming soon!
