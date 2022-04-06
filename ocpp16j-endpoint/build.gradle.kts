@@ -6,11 +6,39 @@ plugins {
     application
 }
 
+
+//region kotlin
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
 }
 
-// Configure integration tests
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    val jvmTarget: String by project
+    kotlinOptions.jvmTarget = jvmTarget
+    kotlinOptions.freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
+}
+//endregion
+
+
+//region unit-tests
+tasks.test {
+    testLogging {
+        events(
+            TestLogEvent.FAILED,
+            TestLogEvent.PASSED,
+            TestLogEvent.SKIPPED,
+            TestLogEvent.STANDARD_OUT
+        )
+        exceptionFormat = TestExceptionFormat.FULL
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+    }
+}
+//endregion
+
+
+//region integration-tests
 sourceSets {
     create("integrationTest") {
         java.srcDirs("src/integrationTest/kotlin")
@@ -20,15 +48,33 @@ sourceSets {
     }
 }
 
-val integrationTestImplementation by configurations.getting {
+val integrationTestImplementation: Configuration by configurations.getting {
     extendsFrom(configurations.testImplementation.get())
 }
 configurations["integrationTestRuntimeOnly"].extendsFrom(configurations.runtimeOnly.get())
 
-// JVM
-val jvmTarget: String by project
+tasks.register<Test>("integrationTest") {
+    group = "verification"
+    testClassesDirs = sourceSets["integrationTest"].output.classesDirs
+    classpath = sourceSets["integrationTest"].runtimeClasspath
+    testLogging {
+        events(
+            TestLogEvent.FAILED,
+            TestLogEvent.PASSED,
+            TestLogEvent.SKIPPED,
+            TestLogEvent.STANDARD_OUT
+        )
+        exceptionFormat = TestExceptionFormat.FULL
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+    }
+    useJUnit()
+}
+//endregion
 
-// Deps
+
+//region dependencies
 val kotlinVersion: String by project
 val ktorVersion: String by project
 val logbackVersion: String by project
@@ -41,75 +87,22 @@ dependencies {
     implementation(project(":ocpp16-service"))
     implementation(project(":ocpp16-protocol"))
 
-    // Kotlin
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
-
-    // Ktor
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-websockets:$ktorVersion")
     implementation("io.ktor:ktor-auth:$ktorVersion")
     implementation("io.ktor:ktor-network-tls-certificates:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
-    testImplementation("io.ktor:ktor-server-tests:$ktorVersion")
-    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
-    testImplementation("io.ktor:ktor-client-core:$ktorVersion")
-    testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
-
-    // Arrow
     implementation("io.arrow-kt:arrow-core:$arrowVersion")
-
-    // Gson
     implementation("com.google.code.gson:gson:$gsonVersion")
-
-    // Kodein
     implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodeinVersion")
-
-    // Jackson
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
-    // Mockk
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
+    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("io.mockk:mockk:$mockkVersion")
 
-    // Docile-Charge-Point
     integrationTestImplementation("com.infuse-ev:docile-charge-point-loader_2.12:0.6.0")
 }
-
-// Tasks
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = jvmTarget
-    kotlinOptions.freeCompilerArgs += "-opt-in=kotlin.RequiresOptIn"
-}
-
-tasks {
-    register<Test>("integrationTest") {
-        group = "verification"
-        testClassesDirs = sourceSets["integrationTest"].output.classesDirs
-        classpath = sourceSets["integrationTest"].runtimeClasspath
-        testLogging {
-            events(TestLogEvent.FAILED,
-                TestLogEvent.PASSED,
-                TestLogEvent.SKIPPED,
-                TestLogEvent.STANDARD_OUT)
-            exceptionFormat = TestExceptionFormat.FULL
-            showExceptions = true
-            showCauses = true
-            showStackTraces = true
-        }
-        useJUnit()
-    }
-
-    test {
-        testLogging {
-            events(TestLogEvent.FAILED,
-                TestLogEvent.PASSED,
-                TestLogEvent.SKIPPED,
-                TestLogEvent.STANDARD_OUT)
-            exceptionFormat = TestExceptionFormat.FULL
-            showExceptions = true
-            showCauses = true
-            showStackTraces = true
-        }
-    }
-}
+//endregion
