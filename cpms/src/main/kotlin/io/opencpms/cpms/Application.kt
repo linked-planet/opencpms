@@ -22,6 +22,7 @@ import io.ktor.application.*
 import io.ktor.features.*
 import io.opencpms.ktor.rabbitmq.*
 import io.opencpms.ocpp16.protocol.*
+import io.opencpms.ocpp16.protocol.message.BootNotificationRequest
 import org.kodein.di.*
 import org.kodein.di.ktor.di
 
@@ -57,6 +58,9 @@ fun Application.main(context: DI) {
             queueBind("ocpp16_request", "ocpp16_request", "ocpp16_request")
             consume<Ocpp16IncomingRequestEnvelope>(this, "ocpp16_request") { body ->
                 println("Consumed message $body")
+                when (body.payload) {
+                    is BootNotificationRequest -> println("It was a boot notification! Hurray!")
+                }
             }
         }
     }
