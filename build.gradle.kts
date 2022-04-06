@@ -19,7 +19,8 @@ subprojects {
         mavenLocal()
     }
 
-    ext.set("jvmTarget", "11")
+    val jvmTarget: String by project
+    ext.set("jvmTarget", jvmTarget)
 
     apply(plugin = "io.gitlab.arturbosch.detekt")
     detekt {
