@@ -22,8 +22,7 @@ import arrow.core.right
 import io.ktor.http.cio.websocket.*
 import io.mockk.*
 import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthService
-import io.opencpms.ocpp16j.endpoint.protocol.CALL_MESSAGE_TYPE_ID
-import io.opencpms.ocpp16j.endpoint.test.util.*
+import io.opencpms.ocpp16j.endpoint.test.util.withTestApplication
 import org.junit.Test
 import kotlin.test.*
 
@@ -240,7 +239,6 @@ class WebsocketSessionTest {
     }
 
     @Test
-    @Suppress("MaxLineLength")
     fun `test call with invalid empty action`() {
         // Mocking
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
@@ -281,7 +279,6 @@ class WebsocketSessionTest {
     }
 
     @Test
-    @Suppress("MaxLineLength")
     fun `test call with invalid action which is missing a required attribute`() {
         // Mocking
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
@@ -324,7 +321,6 @@ class WebsocketSessionTest {
     }
 
     @Test
-    @Suppress("MaxLineLength")
     fun `test call with invalid action whose attribute value is invalid`() {
         // Mocking
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
@@ -409,10 +405,4 @@ class WebsocketSessionTest {
         }
     }
 
-    private fun createTestCall(uniqueId: String): String {
-        val actionPath = "src/test/resources/BootNotificationRequest.json"
-        val actionName = "BootNotification"
-        val actionJsonStr = readFileAsText(actionPath)
-        return "[$CALL_MESSAGE_TYPE_ID,\"$uniqueId\",\"$actionName\", $actionJsonStr]"
-    }
 }

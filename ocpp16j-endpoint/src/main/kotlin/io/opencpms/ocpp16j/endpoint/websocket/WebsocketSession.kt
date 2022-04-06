@@ -147,7 +147,12 @@ class WebsocketSession(
             )
         }
         // TODO response from rabbit
-        val response = BootNotificationResponse(BootNotificationResponse.Status.Accepted, OffsetDateTime.now(), 10L)
+        @Suppress("MagicNumber")
+        val response = BootNotificationResponse(
+            BootNotificationResponse.Status.Accepted,
+            OffsetDateTime.now(),
+            10L
+        )
         val callResponse = OutgoingCallResult(message.uniqueId, response).serialize()
 //        val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
 //            .fold(

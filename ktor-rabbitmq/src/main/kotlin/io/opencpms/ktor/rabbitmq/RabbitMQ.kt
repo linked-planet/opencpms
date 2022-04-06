@@ -26,6 +26,7 @@ import io.ktor.util.pipeline.*
 fun Application.rabbitMq(configuration: RabbitMQInstance.() -> Unit): RabbitMQInstance =
     feature(RabbitMQ).apply(configuration)
 
+@Suppress("UtilityClassWithPublicConstructor")
 class RabbitMQ {
 
     companion object Feature : ApplicationFeature<Application, RabbitMQConfiguration, RabbitMQInstance> {
