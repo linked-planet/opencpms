@@ -1,7 +1,6 @@
 rootProject.name = "opencpms"
 include("ocpp16-protocol")
 include("ocpp16j-endpoint")
-include("ocpp16-service")
 
 pluginManagement {
     val kotlinVersion: String by settings

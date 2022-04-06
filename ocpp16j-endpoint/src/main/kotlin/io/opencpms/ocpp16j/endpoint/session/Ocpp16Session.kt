@@ -16,18 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16.service.receiver
+package io.opencpms.ocpp16j.endpoint.session
 
-import arrow.core.Either
-import io.opencpms.ocpp16.protocol.Ocpp16Error
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingRequest
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingResponse
-import io.opencpms.ocpp16.service.session.Ocpp16Session
+interface Ocpp16Session {
 
-interface Ocpp16MessageReceiver {
+    val chargePointId: String
 
-    fun handleMessage(
-        session: Ocpp16Session,
-        message: Ocpp16IncomingRequest
-    ): Either<Ocpp16Error, Ocpp16OutgoingResponse>
 }

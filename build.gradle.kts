@@ -17,6 +17,7 @@ subprojects {
     repositories {
         mavenCentral()
         mavenLocal()
+        maven { setUrl("https://jitpack.io") }
     }
 
     val jvmTarget: String by project

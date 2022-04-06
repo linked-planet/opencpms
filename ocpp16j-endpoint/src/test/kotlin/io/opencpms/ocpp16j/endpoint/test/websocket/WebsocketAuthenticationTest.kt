@@ -20,7 +20,7 @@ package io.opencpms.ocpp16j.endpoint.test.websocket
 
 import arrow.core.*
 import io.mockk.*
-import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
+import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthService
 import io.opencpms.ocpp16j.endpoint.test.util.*
 import org.junit.*
 import kotlin.test.assertEquals

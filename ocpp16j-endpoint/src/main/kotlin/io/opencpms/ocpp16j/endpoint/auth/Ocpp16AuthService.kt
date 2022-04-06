@@ -16,18 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16.service.auth
+package io.opencpms.ocpp16j.endpoint.auth
 
 import arrow.core.Either
-import arrow.core.right
 
-class Ocpp16AuthServiceImpl : Ocpp16AuthService {
+interface Ocpp16AuthService {
 
-    override fun authenticateChargePoint(chargePointId: String): Either<Error, Unit> {
-        return Unit.right()
-    }
+    fun authenticateChargePoint(chargePointId: String): Either<Error, Unit>
 
-    override fun authenticateChargePointWithAuthKey(chargePointId: String, authKey: String): Either<Error, Unit> {
-        return Unit.right()
-    }
+    fun authenticateChargePointWithAuthKey(chargePointId: String, authKey: String): Either<Error, Unit>
+
 }

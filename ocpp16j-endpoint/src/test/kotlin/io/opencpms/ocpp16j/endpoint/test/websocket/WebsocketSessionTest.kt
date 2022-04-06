@@ -18,110 +18,18 @@
  */
 package io.opencpms.ocpp16j.endpoint.test.websocket
 
-import arrow.core.*
+import arrow.core.right
 import io.ktor.http.cio.websocket.*
 import io.mockk.*
-import io.opencpms.ocpp16.protocol.ProtocolError
-import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
-import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
-import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiver
+import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthService
 import io.opencpms.ocpp16j.endpoint.protocol.CALL_MESSAGE_TYPE_ID
 import io.opencpms.ocpp16j.endpoint.test.util.*
 import org.junit.Test
-import java.time.OffsetDateTime
 import kotlin.test.*
 
 class WebsocketSessionTest {
 
     private val authService = mockk<Ocpp16AuthService>()
-    private val incomingMessageService = mockk<Ocpp16MessageReceiver>()
-
-    @Test
-    fun testCallAndCallResult() {
-        // Mocking
-        val mockResponse = BootNotificationResponse(
-            BootNotificationResponse.Status.Accepted,
-            OffsetDateTime.parse("2021-12-02T20:45:12.208+01:00"),
-            10L
-        )
-        val mockUniqueId = "adb4f199-89fa-40b0-86c0-29b5ec1bd253"
-        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
-        every { incomingMessageService.handleMessage(any(), any()) }.returns(mockResponse.right())
-
-        // Test
-        withTestApplication(basicAuthEnabled = false, authService, ocpp16MessageReceiver = incomingMessageService) {
-            handleWebSocketConversation("/ocpp/16/test",
-                setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
-                },
-                callback = { incoming, outgoing ->
-                    val call = createTestCall(mockUniqueId)
-                    outgoing.send(Frame.Text(call))
-
-                    val response = (incoming.receive() as Frame.Text).readText()
-                    assertNotNull(response)
-
-                    val expectedResponseJson = """
-                        [
-                          3,
-                          "adb4f199-89fa-40b0-86c0-29b5ec1bd253",
-                          {
-                            "status": "Accepted",
-                            "currentTime": "2021-12-02T20:45:12.208+01:00",
-                            "interval": 10
-                          }
-                        ]
-                    """.trimIndent()
-                    assertEquals(expectedResponseJson, response)
-                }
-            )
-        }
-
-        verify(exactly = 1) { incomingMessageService.handleMessage(any(), any()) }
-    }
-
-    @Test
-    fun testCallAndCallError() {
-        // Mocking
-        val mockUUID = "d16d2312-03fe-4dd8-8d06-ea29b7ca2269"
-        val mockResponse = ProtocolError(
-            mockUUID,
-            "details"
-        )
-        every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
-        every { incomingMessageService.handleMessage(any(), any()) }.returns(mockResponse.left())
-
-        // Test
-        withTestApplication(basicAuthEnabled = false, authService, ocpp16MessageReceiver = incomingMessageService) {
-            handleWebSocketConversation("/ocpp/16/test",
-                setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
-                },
-                callback = { incoming, outgoing ->
-                    val call = createTestCall(mockUUID)
-                    outgoing.send(Frame.Text(call))
-
-                    val response = (incoming.receive() as Frame.Text).readText()
-                    assertNotNull(response)
-
-                    val expectedResponseJson = """
-                        [
-                          4,
-                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
-                          "ProtocolError",
-                          "Payload for Action is incomplete",
-                          {
-                            "description": "details"
-                          }
-                        ]
-                    """.trimIndent()
-                    assertEquals(expectedResponseJson, response)
-                }
-            )
-        }
-
-        verify(exactly = 1) { incomingMessageService.handleMessage(any(), any()) }
-    }
 
     @Test
     fun testCallWithoutMessageTypeId() {
@@ -129,7 +37,7 @@ class WebsocketSessionTest {
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
         // Test
-        withTestApplication(basicAuthEnabled = false, authService, ocpp16MessageReceiver = incomingMessageService) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -171,7 +79,7 @@ class WebsocketSessionTest {
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
         // Test
-        withTestApplication(basicAuthEnabled = false, authService, ocpp16MessageReceiver = incomingMessageService) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -213,7 +121,7 @@ class WebsocketSessionTest {
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
         // Test
-        withTestApplication(basicAuthEnabled = false, authService, ocpp16MessageReceiver = incomingMessageService) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -255,7 +163,7 @@ class WebsocketSessionTest {
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
         // Test
-        withTestApplication(basicAuthEnabled = false, authService, ocpp16MessageReceiver = incomingMessageService) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -294,7 +202,7 @@ class WebsocketSessionTest {
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
         // Test
-        withTestApplication(basicAuthEnabled = false, authService, ocpp16MessageReceiver = incomingMessageService) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -338,7 +246,7 @@ class WebsocketSessionTest {
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
         // Test
-        withTestApplication(basicAuthEnabled = false, authService, ocpp16MessageReceiver = incomingMessageService) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -379,7 +287,7 @@ class WebsocketSessionTest {
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
         // Test
-        withTestApplication(basicAuthEnabled = false, authService, ocpp16MessageReceiver = incomingMessageService) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -422,7 +330,7 @@ class WebsocketSessionTest {
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
         // Test
-        withTestApplication(basicAuthEnabled = false, authService, ocpp16MessageReceiver = incomingMessageService) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
@@ -464,7 +372,7 @@ class WebsocketSessionTest {
         every { authService.authenticateChargePoint(any()) }.returns(Unit.right())
 
         // Test
-        withTestApplication(basicAuthEnabled = false, authService, ocpp16MessageReceiver = incomingMessageService) {
+        withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
                     this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")

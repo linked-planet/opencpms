@@ -18,17 +18,18 @@
  */
 package io.opencpms.ocpp16j.endpoint
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
-import io.opencpms.ocpp16.service.auth.Ocpp16AuthServiceImpl
-import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiverImpl
-import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
+import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthServiceImpl
+import io.opencpms.ocpp16j.endpoint.session.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.websocket.*
 import org.kodein.di.*
 import org.kodein.di.ktor.di
+import pl.jutupe.ktor_rabbitmq.RabbitMQ
 import java.time.Duration
 
 private const val OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE = "ocpp1.6"
@@ -41,7 +42,6 @@ fun Application.main() {
         bind { singleton { environment.config } }
         bind { singleton { Ocpp16AuthServiceImpl() } }
         bind { singleton { Ocpp16SessionManager() } }
-        bind { singleton { Ocpp16MessageReceiverImpl() } }
     })
 }
 
@@ -59,14 +59,47 @@ fun Application.main(context: DI) {
         extend(context)
     }
 
+    rabbit()
+
     routing {
         ocpp16AuthorizedChargePoint {
             webSocket("/ocpp/16/{chargePointId}", OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE) {
                 ocpp16Session {
-                    handleIncomingMessages()
+                    call.handleIncomingMessages()
                 }
             }
         }
     }
 }
 
+private fun Application.rabbit() {
+    install(RabbitMQ) {
+        uri = "amqp://guest:guest@localhost:5672"
+        connectionName = "ocpp16j-endpoint"
+
+        enableLogging()
+
+        serialize { jacksonObjectMapper().writeValueAsBytes(it) }
+        deserialize { bytes, type -> jacksonObjectMapper().readValue(bytes, type.javaObjectType) }
+
+        initialize {
+            exchangeDeclare(
+                "boot_notification",
+                "topic",
+                false
+            )
+            queueDeclare(
+                "boot_notification",
+                false,
+                false,
+                false,
+                emptyMap()
+            )
+            queueBind(
+                "boot_notification",
+                "boot_notification",
+                "boot_notification"
+            )
+        }
+    }
+}

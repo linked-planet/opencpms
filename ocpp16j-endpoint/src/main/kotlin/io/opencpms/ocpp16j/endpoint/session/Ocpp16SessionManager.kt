@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16.service.session
+package io.opencpms.ocpp16j.endpoint.session
 
 class Ocpp16SessionManager {
 
@@ -31,4 +31,5 @@ class Ocpp16SessionManager {
     fun unregisterSession(chargePointId: String) {
         registeredSessions.remove(chargePointId)
     }
+
 }

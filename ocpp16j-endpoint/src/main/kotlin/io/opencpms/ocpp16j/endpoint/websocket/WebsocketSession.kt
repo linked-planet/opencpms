@@ -18,47 +18,26 @@
  */
 package io.opencpms.ocpp16j.endpoint.websocket
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.cio.websocket.CloseReason
-import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.cio.websocket.close
-import io.ktor.http.cio.websocket.readText
-import io.ktor.websocket.DefaultWebSocketServerSession
-import io.ktor.websocket.application
-import io.opencpms.ocpp16.protocol.Ocpp16Error
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingResponse
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingRequest
-import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiver
-import io.opencpms.ocpp16.service.session.Ocpp16Session
-import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
-import io.opencpms.ocpp16j.endpoint.json.WebsocketMessageDeserializer
-import io.opencpms.ocpp16j.endpoint.json.serialize
-import io.opencpms.ocpp16j.endpoint.protocol.CallError
-import io.opencpms.ocpp16j.endpoint.protocol.GenericError
-import io.opencpms.ocpp16j.endpoint.protocol.IncomingCall
-import io.opencpms.ocpp16j.endpoint.protocol.IncomingCallResult
-import io.opencpms.ocpp16j.endpoint.protocol.OutgoingCall
-import io.opencpms.ocpp16j.endpoint.protocol.OutgoingCallResult
-import io.opencpms.ocpp16j.endpoint.protocol.toCallError
-import io.opencpms.ocpp16j.endpoint.protocol.toOcpp16Error
-import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import arrow.core.*
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.http.cio.websocket.*
+import io.ktor.websocket.*
+import io.opencpms.ocpp16.protocol.*
+import io.opencpms.ocpp16.protocol.message.*
+import io.opencpms.ocpp16j.endpoint.json.*
+import io.opencpms.ocpp16j.endpoint.protocol.*
+import io.opencpms.ocpp16j.endpoint.session.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.slf4j.LoggerFactory
+import pl.jutupe.ktor_rabbitmq.publish
+import java.time.OffsetDateTime
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 private val log = LoggerFactory.getLogger(DefaultWebSocketServerSession::class.java)
 
@@ -101,14 +80,12 @@ class WebsocketSession(
         private const val RESPONSE_TIMEOUT_MS = 10000L
     }
 
-    private val messageReceiver by closestDI { session.application }.instance<Ocpp16MessageReceiver>()
-
     private val outgoingMessagesLock = Mutex()
 
     private val pendingIncomingCallResponses =
         ConcurrentHashMap<String, Pair<CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>>, Job>>()
 
-    suspend fun handleIncomingMessages() {
+    suspend fun ApplicationCall.handleIncomingMessages() {
         for (frame in session.incoming) {
             when (frame) {
                 is Frame.Text -> {
@@ -214,16 +191,25 @@ class WebsocketSession(
         log.debug("Session closed  [$chargePointId]")
     }
 
-    private suspend fun handleIncomingCall(message: IncomingCall) {
-        val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
-            .fold(
-                {
-                    it.toCallError().serialize()
-                },
-                {
-                    OutgoingCallResult(message.uniqueId, it).serialize()
-                }
-            )
+    private suspend fun ApplicationCall.handleIncomingCall(message: IncomingCall) {
+        publish(
+            "boot_notification",
+            "boot_notification",
+            null,
+            (message.payload as BootNotificationRequest).toString()
+        )
+        // TODO response from rabbit
+        val response = BootNotificationResponse(BootNotificationResponse.Status.Accepted, OffsetDateTime.now(), 10L)
+        val callResponse = OutgoingCallResult(message.uniqueId, response).serialize()
+//        val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
+//            .fold(
+//                {
+//                    it.toCallError().serialize()
+//                },
+//                {
+//                    OutgoingCallResult(message.uniqueId, it).serialize()
+//                }
+//            )
 
         sendText(callResponse)
     }

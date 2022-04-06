@@ -22,7 +22,7 @@ import arrow.core.right
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
-import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
+import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthService
 import io.opencpms.ocpp16j.endpoint.test.util.withTestApplication
 import org.junit.*
 import kotlin.test.assertEquals

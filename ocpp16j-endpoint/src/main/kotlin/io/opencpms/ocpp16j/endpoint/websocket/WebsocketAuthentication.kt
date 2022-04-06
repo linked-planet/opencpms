@@ -22,7 +22,7 @@ import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.config.*
 import io.ktor.routing.*
-import io.opencpms.ocpp16.service.auth.Ocpp16AuthService
+import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthService
 import io.opencpms.ocpp16j.endpoint.config.useBasicAuth
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI

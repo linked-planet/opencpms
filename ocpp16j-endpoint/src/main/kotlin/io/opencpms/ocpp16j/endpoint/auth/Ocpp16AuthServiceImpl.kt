@@ -16,9 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16.service.session
+package io.opencpms.ocpp16j.endpoint.auth
 
-interface Ocpp16Session {
+import arrow.core.*
 
-    val chargePointId: String
+class Ocpp16AuthServiceImpl : Ocpp16AuthService {
+
+    override fun authenticateChargePoint(chargePointId: String): Either<Error, Unit> {
+        return Unit.right()
+    }
+
+    override fun authenticateChargePointWithAuthKey(chargePointId: String, authKey: String): Either<Error, Unit> {
+        return Unit.right()
+    }
+
 }
