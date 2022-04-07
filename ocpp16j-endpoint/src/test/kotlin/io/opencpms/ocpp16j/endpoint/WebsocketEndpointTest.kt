@@ -16,23 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16j.endpoint.test.websocket
+package io.opencpms.ocpp16j.endpoint
 
 import arrow.core.right
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.*
 import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthService
-import io.opencpms.ocpp16j.endpoint.test.util.withTestApplication
 import org.junit.*
 import kotlin.test.assertEquals
 
-class WebsocketEndpointTest {
+class WebsocketEndpointTest : AbstractWebsocketTest() {
 
     private val authService = mockk<Ocpp16AuthService>()
 
     @After
-    fun resetAppConfig() {
+    fun resetMocks() {
         clearAllMocks()
     }
 
@@ -43,7 +42,7 @@ class WebsocketEndpointTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             val response = handleWebSocket("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 }).response
             assertEquals("101 Switching Protocols", response.status().toString())
         }
@@ -56,7 +55,7 @@ class WebsocketEndpointTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             val response = handleWebSocket("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6,ocpp1.5")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6,ocpp1.5")
                 }).response
             assertEquals("101 Switching Protocols", response.status().toString())
         }
@@ -76,7 +75,7 @@ class WebsocketEndpointTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             val response = handleWebSocket("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "karl")
+                    addHeader("Sec-WebSocket-Protocol", "karl")
                 }).response
             assertEquals("404 Not Found", response.status().toString())
         }

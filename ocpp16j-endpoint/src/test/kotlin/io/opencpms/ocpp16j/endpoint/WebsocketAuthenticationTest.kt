@@ -16,21 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16j.endpoint.test.websocket
+package io.opencpms.ocpp16j.endpoint
 
 import arrow.core.*
 import io.mockk.*
 import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthService
-import io.opencpms.ocpp16j.endpoint.test.util.*
 import org.junit.*
+import java.util.*
 import kotlin.test.assertEquals
 
-class WebsocketAuthenticationTest {
+class WebsocketAuthenticationTest : AbstractWebsocketTest() {
 
     private val authService = mockk<Ocpp16AuthService>()
 
     @After
-    fun resetAppConfig() {
+    fun resetMocks() {
         clearAllMocks()
     }
 
@@ -41,7 +41,7 @@ class WebsocketAuthenticationTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             val response = handleWebSocket("/ocpp/16/known",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 }).response
             assertEquals("101 Switching Protocols", response.status().toString())
         }
@@ -56,7 +56,7 @@ class WebsocketAuthenticationTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             val response = handleWebSocket("/ocpp/16/unknown",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 }).response
             assertEquals("404 Not Found", response.status().toString())
         }
@@ -71,10 +71,10 @@ class WebsocketAuthenticationTest {
         withTestApplication(basicAuthEnabled = true, authService) {
             val response = handleWebSocket("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
 
                     val encodedBasicAuthHeader = encodeBase64("test:correct")
-                    this.addHeader("Authorization", "Basic $encodedBasicAuthHeader")
+                    addHeader("Authorization", "Basic $encodedBasicAuthHeader")
                 }).response
             assertEquals("101 Switching Protocols", response.status().toString())
         }
@@ -89,14 +89,18 @@ class WebsocketAuthenticationTest {
         withTestApplication(basicAuthEnabled = true, authService) {
             val response = handleWebSocket("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
 
                     val encodedBasicAuthHeader = encodeBase64("test:incorrect")
-                    this.addHeader("Authorization", "Basic $encodedBasicAuthHeader")
+                    addHeader("Authorization", "Basic $encodedBasicAuthHeader")
                 }).response
             assertEquals("404 Not Found", response.status().toString())
         }
 
         verify(exactly = 1) { authService.authenticateChargePointWithAuthKey("test", "incorrect") }
     }
+
+    private fun encodeBase64(str: String): String =
+        Base64.getEncoder().encodeToString(str.toByteArray())
+
 }

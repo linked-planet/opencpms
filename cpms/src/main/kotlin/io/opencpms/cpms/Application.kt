@@ -19,12 +19,13 @@
 package io.opencpms.cpms
 
 import io.ktor.application.*
+import io.ktor.config.*
 import io.ktor.features.*
 import io.opencpms.ktor.rabbitmq.*
 import io.opencpms.ocpp16.protocol.*
 import io.opencpms.ocpp16.protocol.message.BootNotificationRequest
 import org.kodein.di.*
-import org.kodein.di.ktor.di
+import org.kodein.di.ktor.*
 
 
 fun Application.main() {
@@ -42,8 +43,14 @@ fun Application.main(context: DI) {
     install(CallLogging)
 
     install(RabbitMQ) {
-        uri = "amqp://guest:guest@localhost:5672"
-        connectionName = "cpms"
+        val config by closestDI().instance<ApplicationConfig>()
+        val rabbitConfig = config.config("rabbit")
+        val user = rabbitConfig.property("user").getString()
+        val password = rabbitConfig.property("password").getString()
+        val host = rabbitConfig.property("host").getString()
+        val port = rabbitConfig.property("port").getString().toInt()
+        uri = "amqp://$user:$password@$host:$port"
+        connectionName = rabbitConfig.property("connectionName").getString()
 
         enableLogging()
 

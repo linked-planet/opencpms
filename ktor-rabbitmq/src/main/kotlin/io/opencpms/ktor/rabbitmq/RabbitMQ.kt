@@ -38,8 +38,7 @@ class RabbitMQ {
             configure: RabbitMQConfiguration.() -> Unit
         ): RabbitMQInstance {
             val configuration = RabbitMQConfiguration.create().apply(configure)
-            val rabbit = configuration.rabbitMQInstance ?: RabbitMQInstance(configuration)
-            return rabbit.apply {
+            return RabbitMQInstance(configuration).apply {
                 pipeline.attributes.put(key, this)
                 logger?.info("RabbitMQ initialized")
             }

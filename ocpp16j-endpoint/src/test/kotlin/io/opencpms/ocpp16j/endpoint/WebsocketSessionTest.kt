@@ -16,19 +16,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16j.endpoint.test.websocket
+package io.opencpms.ocpp16j.endpoint
 
 import arrow.core.right
 import io.ktor.http.cio.websocket.*
 import io.mockk.*
 import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthService
-import io.opencpms.ocpp16j.endpoint.test.util.withTestApplication
+import org.junit.*
 import org.junit.Test
+import org.skyscreamer.jsonassert.*
 import kotlin.test.*
 
-class WebsocketSessionTest {
+class WebsocketSessionTest : AbstractWebsocketTest() {
 
     private val authService = mockk<Ocpp16AuthService>()
+
+    @After
+    fun resetMocks() {
+        clearAllMocks()
+    }
 
     @Test
     fun testCallWithoutMessageTypeId() {
@@ -39,7 +45,7 @@ class WebsocketSessionTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 },
                 callback = { incoming, outgoing ->
                     val call = """
@@ -61,12 +67,12 @@ class WebsocketSessionTest {
                         [
                           4,
                           "UNKNOWN",
-                          "GenericError",
-                          "Could not parse CallResult, invalid [json-]format",
-                          {}
+                          "FormationViolation",
+                          "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
+                          null
                         ]
                     """.trimIndent()
-                    assertEquals(expectedResponseJson, response)
+                    JSONAssert.assertEquals(expectedResponseJson, response, JSONCompareMode.LENIENT)
                 }
             )
         }
@@ -81,7 +87,7 @@ class WebsocketSessionTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 },
                 callback = { incoming, outgoing ->
                     val call = """
@@ -102,13 +108,13 @@ class WebsocketSessionTest {
                     val expectedResponseJson = """
                         [
                           4,
-                          "BootNotification",
+                          "UNKNOWN",
                           "FormationViolation",
                           "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
-                          {}
+                          null
                         ]
                     """.trimIndent()
-                    assertEquals(expectedResponseJson, response)
+                    JSONAssert.assertEquals(expectedResponseJson, response, JSONCompareMode.LENIENT)
                 }
             )
         }
@@ -123,7 +129,7 @@ class WebsocketSessionTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 },
                 callback = { incoming, outgoing ->
                     val call = """
@@ -144,13 +150,13 @@ class WebsocketSessionTest {
                     val expectedResponseJson = """
                         [
                           4,
-                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "UNKNOWN",
                           "FormationViolation",
                           "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
-                          {}
+                          null
                         ]
                     """.trimIndent()
-                    assertEquals(expectedResponseJson, response)
+                    JSONAssert.assertEquals(expectedResponseJson, response, JSONCompareMode.LENIENT)
                 }
             )
         }
@@ -165,7 +171,7 @@ class WebsocketSessionTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 },
                 callback = { incoming, outgoing ->
                     val call = """
@@ -183,13 +189,13 @@ class WebsocketSessionTest {
                     val expectedResponseJson = """
                         [
                           4,
-                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
-                          "GenericError",
-                          "Could not parse CallResult, invalid [json-]format",
-                          {}
+                          "UNKNOWN",
+                          "FormationViolation",
+                          "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
+                          null
                         ]
                     """.trimIndent()
-                    assertEquals(expectedResponseJson, response)
+                    JSONAssert.assertEquals(expectedResponseJson, response, JSONCompareMode.LENIENT)
                 }
             )
         }
@@ -204,7 +210,7 @@ class WebsocketSessionTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 },
                 callback = { incoming, outgoing ->
                     val call = """
@@ -227,12 +233,12 @@ class WebsocketSessionTest {
                         [
                           4,
                           "UNKNOWN",
-                          "GenericError",
-                          "Invalid json",
-                          {}
+                          "FormationViolation",
+                          "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
+                          null
                         ]
                     """.trimIndent()
-                    assertEquals(expectedResponseJson, response)
+                    JSONAssert.assertEquals(expectedResponseJson, response, JSONCompareMode.LENIENT)
                 }
             )
         }
@@ -247,7 +253,7 @@ class WebsocketSessionTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 },
                 callback = { incoming, outgoing ->
                     val call = """
@@ -266,13 +272,13 @@ class WebsocketSessionTest {
                     val expectedResponseJson = """
                         [
                           4,
-                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "UNKNOWN",
                           "FormationViolation",
                           "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
-                          {}
+                          null
                         ]
                     """.trimIndent()
-                    assertEquals(expectedResponseJson, response)
+                    JSONAssert.assertEquals(expectedResponseJson, response, JSONCompareMode.LENIENT)
                 }
             )
         }
@@ -287,7 +293,7 @@ class WebsocketSessionTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 },
                 callback = { incoming, outgoing ->
                     val call = """
@@ -308,13 +314,13 @@ class WebsocketSessionTest {
                     val expectedResponseJson = """
                         [
                           4,
-                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "UNKNOWN",
                           "FormationViolation",
                           "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
-                          {}
+                          null
                         ]
                     """.trimIndent()
-                    assertEquals(expectedResponseJson, response)
+                    JSONAssert.assertEquals(expectedResponseJson, response, JSONCompareMode.LENIENT)
                 }
             )
         }
@@ -329,7 +335,7 @@ class WebsocketSessionTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 },
                 callback = { incoming, outgoing ->
                     val call = """
@@ -350,13 +356,13 @@ class WebsocketSessionTest {
                     val expectedResponseJson = """
                         [
                           4,
-                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
+                          "UNKNOWN",
                           "FormationViolation",
                           "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
-                          {}
+                          null
                         ]
                     """.trimIndent()
-                    assertEquals(expectedResponseJson, response)
+                    JSONAssert.assertEquals(expectedResponseJson, response, JSONCompareMode.LENIENT)
                 }
             )
         }
@@ -371,7 +377,7 @@ class WebsocketSessionTest {
         withTestApplication(basicAuthEnabled = false, authService) {
             handleWebSocketConversation("/ocpp/16/test",
                 setup = {
-                    this.addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
+                    addHeader("Sec-WebSocket-Protocol", "ocpp1.6")
                 },
                 callback = { incoming, outgoing ->
                     val call = """
@@ -393,13 +399,13 @@ class WebsocketSessionTest {
                     val expectedResponseJson = """
                         [
                           4,
-                          "d16d2312-03fe-4dd8-8d06-ea29b7ca2269",
-                          "PropertyConstraintViolation",
-                          "Payload is syntactically correct but at least one field contains an invalid value",
-                          {}
+                          "UNKNOWN",
+                          "FormationViolation",
+                          "Payload for Action is syntactically incorrect or not conform to the PDU structure for Action",
+                          null
                         ]
                     """.trimIndent()
-                    assertEquals(expectedResponseJson, response)
+                    JSONAssert.assertEquals(expectedResponseJson, response, JSONCompareMode.LENIENT)
                 }
             )
         }

@@ -19,6 +19,7 @@
 package io.opencpms.ocpp16j.endpoint
 
 import io.ktor.application.*
+import io.ktor.config.*
 import io.ktor.features.*
 import io.ktor.http.cio.websocket.*
 import io.ktor.routing.*
@@ -29,7 +30,7 @@ import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthServiceImpl
 import io.opencpms.ocpp16j.endpoint.session.Ocpp16SessionManager
 import io.opencpms.ocpp16j.endpoint.websocket.*
 import org.kodein.di.*
-import org.kodein.di.ktor.di
+import org.kodein.di.ktor.*
 import java.time.Duration
 
 private const val OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE = "ocpp1.6"
@@ -61,8 +62,14 @@ fun Application.main(context: DI) {
     }
 
     install(RabbitMQ) {
-        uri = "amqp://guest:guest@localhost:5672"
-        connectionName = "ocpp16j-endpoint"
+        val config by closestDI().instance<ApplicationConfig>()
+        val rabbitConfig = config.config("rabbit")
+        val user = rabbitConfig.property("user").getString()
+        val password = rabbitConfig.property("password").getString()
+        val host = rabbitConfig.property("host").getString()
+        val port = rabbitConfig.property("port").getString().toInt()
+        uri = "amqp://$user:$password@$host:$port"
+        connectionName = rabbitConfig.property("connectionName").getString()
 
         enableLogging()
 

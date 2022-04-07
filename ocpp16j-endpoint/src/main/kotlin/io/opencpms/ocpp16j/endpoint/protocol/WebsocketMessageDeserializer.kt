@@ -24,24 +24,19 @@ import io.opencpms.ocpp16.protocol.*
 
 object WebsocketMessageDeserializer {
 
-    private const val CALL_ENTRIES = 4
-    private const val CALL_RESULT_ENTRIES = 3
-    private const val CALL_ERROR_ENTRIES = 5
-
-    @Suppress("TooGenericExceptionThrown")
+    @Suppress("TooGenericExceptionThrown", "MagicNumber")
     fun deserialize(json: String): Either<Ocpp16Error, WebsocketMessage> =
         catch {
-            // TODO instead derive from message type id:
-            //  CALL: 2
-            //  CALLRESULT: 3
-            //  CALLERROR: 4
-            when (ocpp16JsonMapper.readTree(json).size()) {
-                CALL_ENTRIES -> ocpp16JsonMapper.readValue(json, IncomingCall::class.java)
-                CALL_RESULT_ENTRIES -> ocpp16JsonMapper.readValue(json, IncomingCallResult::class.java)
-                CALL_ERROR_ENTRIES -> ocpp16JsonMapper.readValue(json, CallError::class.java)
+            // TODO can be programmed such that we extract more data from the base array
+            //      to provide this information in case there are errors
+            val node = ocpp16JsonMapper.readTree(json)
+            when (node[0].asInt()) {
+                2 -> ocpp16JsonMapper.readValue(json, IncomingCall::class.java)
+                3 -> ocpp16JsonMapper.readValue(json, IncomingCallResult::class.java)
+                4 -> ocpp16JsonMapper.readValue(json, CallError::class.java)
                 else -> throw RuntimeException("Unknown message format: $json")
             }
         }
-            .mapLeft { GenericError("Invalid json: $it") }
+            .mapLeft { FormationViolation() }
 
 }

@@ -21,8 +21,6 @@ package io.opencpms.ocpp16j.endpoint.protocol
 import com.fasterxml.jackson.annotation.*
 import io.opencpms.ocpp16.protocol.*
 
-const val CALL_MESSAGE_TYPE_ID = 2
-
 @JsonFormat(shape = JsonFormat.Shape.ARRAY)
 @JsonPropertyOrder("messageTypeId", "uniqueId", "actionName", "payload")
 data class IncomingCall(

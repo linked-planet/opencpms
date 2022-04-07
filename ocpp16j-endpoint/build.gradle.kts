@@ -102,6 +102,9 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
     testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
     testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("org.testcontainers", "junit-jupiter", "1.16.3")
+    testImplementation("org.testcontainers", "rabbitmq", "1.16.3")
+    testImplementation("org.skyscreamer", "jsonassert", "1.5.0")
 
     integrationTestImplementation("com.infuse-ev:docile-charge-point-loader_2.12:0.6.0")
 }
