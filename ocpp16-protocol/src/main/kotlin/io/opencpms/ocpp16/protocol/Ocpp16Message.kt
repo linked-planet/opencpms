@@ -18,16 +18,18 @@
  */
 package io.opencpms.ocpp16.protocol
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo
+
 private const val OCPP16_REQUEST_SUFFIX = "Request"
 
 private const val OCPP16_RESPONSE_SUFFIX = "Response"
 
 interface Ocpp16Request {
-    fun getActionName() = this.javaClass.name.removeSuffix(OCPP16_REQUEST_SUFFIX)
+    fun findActionName() = this.javaClass.name.removeSuffix(OCPP16_REQUEST_SUFFIX)
 }
 
 interface Ocpp16Response {
-    fun getActionName(): String = this.javaClass.name.removeSuffix(OCPP16_RESPONSE_SUFFIX)
+    fun findActionName(): String = this.javaClass.name.removeSuffix(OCPP16_RESPONSE_SUFFIX)
 }
 
 /**
@@ -49,3 +51,10 @@ interface Ocpp16IncomingRequest : Ocpp16Request
  * Marks an OCPP1.6 response which is sent from CP -> CS (= incoming).
  */
 interface Ocpp16IncomingResponse : Ocpp16Response
+
+data class Ocpp16IncomingRequestEnvelope(
+    val uniqueId: String,
+    val actionName: String,
+    @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "actionName")
+    val payload: Ocpp16IncomingRequest
+)

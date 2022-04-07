@@ -18,6 +18,7 @@
  */
 package io.opencpms.ocpp16j.endpoint.protocol
 
+import com.fasterxml.jackson.annotation.*
 import io.opencpms.ocpp16.protocol.Ocpp16IncomingResponse
 import io.opencpms.ocpp16.protocol.Ocpp16OutgoingResponse
 
@@ -28,15 +29,21 @@ interface IncomingCallResponse : WebsocketMessage
 // ----- CallResult
 const val CALL_RESULT_MESSAGE_TYPE_ID = 3
 
+@JsonFormat(shape = JsonFormat.Shape.ARRAY)
+@JsonPropertyOrder("messageTypeId", "uniqueId", "payload")
 data class OutgoingCallResult(
     override val uniqueId: String,
+    @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "uniqueId")
     val payload: Ocpp16OutgoingResponse
 ) : OutgoingCallResponse {
     val messageTypeId = CALL_RESULT_MESSAGE_TYPE_ID
 }
 
+@JsonFormat(shape = JsonFormat.Shape.ARRAY)
+@JsonPropertyOrder("messageTypeId", "uniqueId", "payload")
 data class IncomingCallResult(
     override val uniqueId: String,
+    @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "uniqueId")
     val payload: Ocpp16IncomingResponse,
     val messageTypeId: Int
 ) : IncomingCallResponse {
@@ -45,7 +52,10 @@ data class IncomingCallResult(
 
 const val CALL_ERROR_MESSAGE_TYPE_ID = 4
 
+
 // ----- CallError
+@JsonFormat(shape = JsonFormat.Shape.ARRAY)
+@JsonPropertyOrder("messageTypeId", "uniqueId", "errorCode", "errorDescription", "errorDetails")
 data class CallError(
     override val uniqueId: String,
     val errorCode: Ocpp16ErrorCode,
@@ -53,7 +63,6 @@ data class CallError(
     val errorDetails: String?
 ) : OutgoingCallResponse, IncomingCallResponse {
     val messageTypeId: Int = CALL_ERROR_MESSAGE_TYPE_ID
-
     companion object
 }
 

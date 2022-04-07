@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ocpp16j-endpoint.integrationtest" type="JUnit" factoryName="JUnit">
+  <configuration default="false" name="ocpp16j-endpoint:integrationTest" type="JUnit" factoryName="JUnit">
     <module name="opencpms.ocpp16j-endpoint.integrationTest" />
     <option name="PACKAGE_NAME" value="io.opencpms.ocpp16j.endpoint.integrationtest" />
     <option name="MAIN_CLASS_NAME" value="" />

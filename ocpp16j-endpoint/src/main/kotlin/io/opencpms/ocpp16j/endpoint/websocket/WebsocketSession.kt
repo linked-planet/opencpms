@@ -18,47 +18,24 @@
  */
 package io.opencpms.ocpp16j.endpoint.websocket
 
-import arrow.core.Either
-import arrow.core.left
-import arrow.core.right
-import io.ktor.http.HttpStatusCode
-import io.ktor.http.cio.websocket.CloseReason
-import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.cio.websocket.close
-import io.ktor.http.cio.websocket.readText
-import io.ktor.websocket.DefaultWebSocketServerSession
-import io.ktor.websocket.application
-import io.opencpms.ocpp16.protocol.Ocpp16Error
-import io.opencpms.ocpp16.protocol.Ocpp16IncomingResponse
-import io.opencpms.ocpp16.protocol.Ocpp16OutgoingRequest
-import io.opencpms.ocpp16.service.receiver.Ocpp16MessageReceiver
-import io.opencpms.ocpp16.service.session.Ocpp16Session
-import io.opencpms.ocpp16.service.session.Ocpp16SessionManager
-import io.opencpms.ocpp16j.endpoint.json.WebsocketMessageDeserializer
-import io.opencpms.ocpp16j.endpoint.json.serialize
-import io.opencpms.ocpp16j.endpoint.protocol.CallError
-import io.opencpms.ocpp16j.endpoint.protocol.GenericError
-import io.opencpms.ocpp16j.endpoint.protocol.IncomingCall
-import io.opencpms.ocpp16j.endpoint.protocol.IncomingCallResult
-import io.opencpms.ocpp16j.endpoint.protocol.OutgoingCall
-import io.opencpms.ocpp16j.endpoint.protocol.OutgoingCallResult
-import io.opencpms.ocpp16j.endpoint.protocol.toCallError
-import io.opencpms.ocpp16j.endpoint.protocol.toOcpp16Error
-import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import arrow.core.*
+import io.ktor.application.*
+import io.ktor.http.*
+import io.ktor.http.cio.websocket.*
+import io.ktor.websocket.*
+import io.opencpms.ktor.rabbitmq.*
+import io.opencpms.ocpp16.protocol.*
+import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
+import io.opencpms.ocpp16j.endpoint.protocol.*
+import io.opencpms.ocpp16j.endpoint.session.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.slf4j.LoggerFactory
+import java.time.OffsetDateTime
+import java.util.concurrent.ConcurrentHashMap
 
 private val log = LoggerFactory.getLogger(DefaultWebSocketServerSession::class.java)
 
@@ -97,18 +74,16 @@ class WebsocketSession(
     companion object {
         private val log = LoggerFactory.getLogger(WebsocketSession::class.java)
 
-        private const val REQUEST_TIMEOUT_MS = 10000L
-        private const val RESPONSE_TIMEOUT_MS = 10000L
+//        private const val REQUEST_TIMEOUT_MS = 10000L
+//        private const val RESPONSE_TIMEOUT_MS = 10000L
     }
-
-    private val messageReceiver by closestDI { session.application }.instance<Ocpp16MessageReceiver>()
 
     private val outgoingMessagesLock = Mutex()
 
     private val pendingIncomingCallResponses =
         ConcurrentHashMap<String, Pair<CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>>, Job>>()
 
-    suspend fun handleIncomingMessages() {
+    suspend fun Application.handleIncomingMessages() {
         for (frame in session.incoming) {
             when (frame) {
                 is Frame.Text -> {
@@ -116,10 +91,10 @@ class WebsocketSession(
 
                     log.trace("Received message '$text' [$chargePointId]")
 
-                    WebsocketMessageDeserializer.deserialize(text) { it }
+                    WebsocketMessageDeserializer.deserialize(text)
                         .fold(
                             {
-                                sendText(it.toCallError().serialize())
+                                sendText(ocpp16JsonMapper.writeValueAsString(it.toCallError()))
                             },
                             { incomingMessage ->
                                 val uniqueId = incomingMessage.uniqueId
@@ -160,45 +135,76 @@ class WebsocketSession(
         }
     }
 
-    suspend fun sendOutgoingCall(message: Ocpp16OutgoingRequest):
-            Deferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> {
-
-        val uniqueId = UUID.randomUUID().toString()
-        val promise: CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> = CompletableDeferred()
-
-        withContext(Dispatchers.Default) {
-            launch {
-                // Send message in background
-                withTimeout(REQUEST_TIMEOUT_MS) {
-                    outgoingMessagesLock.lock()
-                    val call = OutgoingCall(uniqueId, message.getActionName(), message)
-                    sendText(call.serialize())
-                }
-            }.invokeOnCompletion { error ->
-                // Register listener which is called when message sending is completed
-                error
-                    ?.let { // Error
-                        outgoingMessagesLock.unlock()
-                        promise.complete(GenericError("Could not send Call to client").left())
-                        log.error("Could not send Call to client [$chargePointId]")
-                    }
-                    ?: let { // Success
-                        // Create response timeout handler
-                        val receiveMessageTimeoutTask = launch {
-                            withTimeout(RESPONSE_TIMEOUT_MS) {
-                                outgoingMessagesLock.unlock()
-                                pendingIncomingCallResponses.remove(uniqueId)
-                            }
-                        }
-
-                        // Register for incoming response
-                        pendingIncomingCallResponses.put(uniqueId, promise to receiveMessageTimeoutTask)
-                    }
-            }
+    private suspend fun Application.handleIncomingCall(message: IncomingCall) {
+        rabbitMq {
+            publish(
+                "ocpp16_request_publish",
+                "ocpp16_request",
+                "ocpp16_request",
+                Ocpp16IncomingRequestEnvelope(message.uniqueId, message.actionName, message.payload)
+            )
         }
+        // TODO response from rabbit
+        @Suppress("MagicNumber")
+        val response = BootNotificationResponse(
+            BootNotificationResponse.Status.Accepted,
+            OffsetDateTime.now(),
+            10L
+        )
+        val callResponse = OutgoingCallResult(message.uniqueId, response)
+//        val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
+//            .fold(
+//                {
+//                    it.toCallError().serialize()
+//                },
+//                {
+//                    OutgoingCallResult(message.uniqueId, it).serialize()
+//                }
+//            )
 
-        return promise
+        println("RESPONDING: ${ocpp16JsonMapper.writeValueAsString(callResponse)}")
+        sendText(ocpp16JsonMapper.writeValueAsString(callResponse))
     }
+
+//    suspend fun sendOutgoingCall(message: Ocpp16OutgoingRequest):
+//            Deferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> {
+//
+//        val uniqueId = UUID.randomUUID().toString()
+//        val promise: CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> = CompletableDeferred()
+//
+//        withContext(Dispatchers.Default) {
+//            launch {
+//                // Send message in background
+//                withTimeout(REQUEST_TIMEOUT_MS) {
+//                    outgoingMessagesLock.lock()
+//                    val call = OutgoingCall(uniqueId, message.findActionName(), message)
+//                    sendText(call.serialize())
+//                }
+//            }.invokeOnCompletion { error ->
+//                // Register listener which is called when message sending is completed
+//                error
+//                    ?.let { // Error
+//                        outgoingMessagesLock.unlock()
+//                        promise.complete(GenericError("Could not send Call to client").left())
+//                        log.error("Could not send Call to client [$chargePointId]")
+//                    }
+//                    ?: let { // Success
+//                        // Create response timeout handler
+//                        val receiveMessageTimeoutTask = launch {
+//                            withTimeout(RESPONSE_TIMEOUT_MS) {
+//                                outgoingMessagesLock.unlock()
+//                                pendingIncomingCallResponses.remove(uniqueId)
+//                            }
+//                        }
+//
+//                        // Register for incoming response
+//                        pendingIncomingCallResponses.put(uniqueId, promise to receiveMessageTimeoutTask)
+//                    }
+//            }
+//        }
+//
+//        return promise
+//    }
 
     fun closeSession() {
         pendingIncomingCallResponses.forEach {
@@ -212,20 +218,6 @@ class WebsocketSession(
         }
 
         log.debug("Session closed  [$chargePointId]")
-    }
-
-    private suspend fun handleIncomingCall(message: IncomingCall) {
-        val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
-            .fold(
-                {
-                    it.toCallError().serialize()
-                },
-                {
-                    OutgoingCallResult(message.uniqueId, it).serialize()
-                }
-            )
-
-        sendText(callResponse)
     }
 
     private fun handleIncomingCallResponse(

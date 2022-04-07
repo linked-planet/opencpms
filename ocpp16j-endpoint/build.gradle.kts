@@ -78,34 +78,38 @@ tasks.register<Test>("integrationTest") {
 val kotlinVersion: String by project
 val ktorVersion: String by project
 val log4jVersion: String by project
+val lmaxDisruptorVersion: String by project
 val arrowVersion: String by project
-val gsonVersion: String by project
 val kodeinVersion: String by project
 val jacksonVersion: String by project
 val mockkVersion: String by project
+val testContainersVersion: String by project
+val jsonAssertVersion: String by project
+val docileChargePointVersion: String by project
 dependencies {
-    implementation(project(":ocpp16-service"))
+    implementation(project(":ktor-rabbitmq"))
     implementation(project(":ocpp16-protocol"))
 
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-websockets:$ktorVersion")
-    implementation("io.ktor:ktor-auth:$ktorVersion")
-    implementation("io.ktor:ktor-network-tls-certificates:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.arrow-kt:arrow-core:$arrowVersion")
-    implementation("com.google.code.gson:gson:$gsonVersion")
-    implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodeinVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation("io.ktor", "ktor-websockets", ktorVersion)
+    implementation("io.ktor", "ktor-auth", ktorVersion)
+    implementation("io.ktor", "ktor-network-tls-certificates", ktorVersion)
+    implementation("io.ktor", "ktor-server-netty", ktorVersion)
+    implementation("io.arrow-kt", "arrow-core", arrowVersion)
+    implementation("org.kodein.di", "kodein-di-framework-ktor-server-jvm", kodeinVersion)
+    implementation("com.fasterxml.jackson.module", "jackson-module-kotlin", jacksonVersion)
     implementation("org.apache.logging.log4j", "log4j-api", log4jVersion)
     implementation("org.apache.logging.log4j", "log4j-core", log4jVersion)
     implementation("org.apache.logging.log4j", "log4j-slf4j-impl", log4jVersion)
-    implementation("com.lmax", "disruptor", "3.4.2")
+    implementation("com.lmax", "disruptor", lmaxDisruptorVersion)
 
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
-    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
-    testImplementation("io.mockk:mockk:$mockkVersion")
+    testImplementation("org.jetbrains.kotlin", "kotlin-test-junit", kotlinVersion)
+    testImplementation("org.jetbrains.kotlin", "kotlin-test", kotlinVersion)
+    testImplementation("io.ktor", "ktor-server-test-host", ktorVersion)
+    testImplementation("io.mockk", "mockk", mockkVersion)
+    testImplementation("org.testcontainers", "junit-jupiter", testContainersVersion)
+    testImplementation("org.testcontainers", "rabbitmq", testContainersVersion)
+    testImplementation("org.skyscreamer", "jsonassert", jsonAssertVersion)
 
-    integrationTestImplementation("com.infuse-ev:docile-charge-point-loader_2.12:0.6.0")
+    integrationTestImplementation("com.infuse-ev", "docile-charge-point-loader_2.12", docileChargePointVersion)
 }
 //endregion

@@ -16,33 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package io.opencpms.ocpp16j.endpoint
+package io.opencpms.cpms
 
 import io.ktor.application.*
 import io.ktor.config.*
 import io.ktor.features.*
-import io.ktor.http.cio.websocket.*
-import io.ktor.routing.*
-import io.ktor.websocket.*
 import io.opencpms.ktor.rabbitmq.*
-import io.opencpms.ocpp16.protocol.ocpp16JsonMapper
-import io.opencpms.ocpp16j.endpoint.auth.Ocpp16AuthServiceImpl
-import io.opencpms.ocpp16j.endpoint.session.Ocpp16SessionManager
-import io.opencpms.ocpp16j.endpoint.websocket.*
+import io.opencpms.ocpp16.protocol.*
+import io.opencpms.ocpp16.protocol.message.BootNotificationRequest
 import org.kodein.di.*
 import org.kodein.di.ktor.*
-import java.time.Duration
-
-private const val OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE = "ocpp1.6"
-private const val WEBSOCKET_PING_PERIOD_SECONDS = 15L
-private const val WEBSOCKET_TIMEOUT_SECONDS = 15L
 
 
 fun Application.main() {
     main(DI {
         bind { singleton { environment.config } }
-        bind { singleton { Ocpp16AuthServiceImpl() } }
-        bind { singleton { Ocpp16SessionManager() } }
     })
 }
 
@@ -53,13 +41,6 @@ fun Application.main(context: DI) {
 
     install(DefaultHeaders)
     install(CallLogging)
-
-    install(WebSockets) {
-        pingPeriod = Duration.ofSeconds(WEBSOCKET_PING_PERIOD_SECONDS)
-        timeout = Duration.ofSeconds(WEBSOCKET_TIMEOUT_SECONDS)
-        maxFrameSize = Long.MAX_VALUE
-        masking = false
-    }
 
     install(RabbitMQ) {
         val config by closestDI().instance<ApplicationConfig>()
@@ -78,21 +59,16 @@ fun Application.main(context: DI) {
     }
 
     rabbitMq {
-        newChannel("ocpp16_request_publish") {
+        newChannel("ocpp16_request_consume") {
             exchangeDeclare("ocpp16_request", "topic", true)
             queueDeclare("ocpp16_request", true, false, false, emptyMap())
             queueBind("ocpp16_request", "ocpp16_request", "ocpp16_request")
-        }
-    }
-
-    routing {
-        ocpp16AuthorizedChargePoint {
-            webSocket("/ocpp/16/{chargePointId}", OCPP16_WEBSOCKET_PROTOCOL_HEADER_VALUE) {
-                ocpp16Session {
-                    application.handleIncomingMessages()
+            consume<Ocpp16IncomingRequestEnvelope>(this, "ocpp16_request") { body ->
+                println("Consumed message $body")
+                when (body.payload) {
+                    is BootNotificationRequest -> println("It was a boot notification! Hurray!")
                 }
             }
         }
     }
-
 }

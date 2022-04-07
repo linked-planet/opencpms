@@ -1,7 +1,8 @@
 rootProject.name = "opencpms"
+include("ktor-rabbitmq")
 include("ocpp16-protocol")
 include("ocpp16j-endpoint")
-include("ocpp16-service")
+include("cpms")
 
 pluginManagement {
     val kotlinVersion: String by settings
