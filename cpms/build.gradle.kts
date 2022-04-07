@@ -1,5 +1,4 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.gradle.api.tasks.testing.logging.*
 
 plugins {
     kotlin("jvm")
@@ -39,28 +38,19 @@ tasks.test {
 
 
 //region dependencies
-val kotlinVersion: String by project
 val ktorVersion: String by project
 val log4jVersion: String by project
-val arrowVersion: String by project
+val lmaxDisruptorVersion: String by project
 val kodeinVersion: String by project
-val jacksonVersion: String by project
 dependencies {
     implementation(project(":ktor-rabbitmq"))
     implementation(project(":ocpp16-protocol"))
 
-    implementation("io.ktor:ktor-auth:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty:$ktorVersion")
-    implementation("io.arrow-kt:arrow-core:$arrowVersion")
-    implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodeinVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
+    implementation("io.ktor", "ktor-server-netty", ktorVersion)
+    implementation("org.kodein.di", "kodein-di-framework-ktor-server-jvm", kodeinVersion)
     implementation("org.apache.logging.log4j", "log4j-api", log4jVersion)
     implementation("org.apache.logging.log4j", "log4j-core", log4jVersion)
     implementation("org.apache.logging.log4j", "log4j-slf4j-impl", log4jVersion)
-    implementation("com.lmax", "disruptor", "3.4.2")
-
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:$kotlinVersion")
-    testImplementation("io.ktor:ktor-server-test-host:$ktorVersion")
+    implementation("com.lmax", "disruptor", lmaxDisruptorVersion)
 }
 //endregion
