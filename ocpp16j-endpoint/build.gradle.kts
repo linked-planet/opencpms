@@ -79,7 +79,6 @@ val kotlinVersion: String by project
 val ktorVersion: String by project
 val log4jVersion: String by project
 val arrowVersion: String by project
-val gsonVersion: String by project
 val kodeinVersion: String by project
 val jacksonVersion: String by project
 val mockkVersion: String by project
@@ -92,7 +91,6 @@ dependencies {
     implementation("io.ktor:ktor-network-tls-certificates:$ktorVersion")
     implementation("io.ktor:ktor-server-netty:$ktorVersion")
     implementation("io.arrow-kt:arrow-core:$arrowVersion")
-    implementation("com.google.code.gson:gson:$gsonVersion")
     implementation("org.kodein.di:kodein-di-framework-ktor-server-jvm:$kodeinVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("org.apache.logging.log4j", "log4j-api", log4jVersion)

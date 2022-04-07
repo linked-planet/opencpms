@@ -55,6 +55,6 @@ interface Ocpp16IncomingResponse : Ocpp16Response
 data class Ocpp16IncomingRequestEnvelope(
     val uniqueId: String,
     val actionName: String,
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "actionName")
+    @JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION, include = JsonTypeInfo.As.EXTERNAL_PROPERTY, property = "actionName")
     val payload: Ocpp16IncomingRequest
 )

@@ -26,7 +26,6 @@ import io.ktor.websocket.*
 import io.opencpms.ktor.rabbitmq.*
 import io.opencpms.ocpp16.protocol.*
 import io.opencpms.ocpp16.protocol.message.BootNotificationResponse
-import io.opencpms.ocpp16j.endpoint.json.*
 import io.opencpms.ocpp16j.endpoint.protocol.*
 import io.opencpms.ocpp16j.endpoint.session.*
 import kotlinx.coroutines.*
@@ -36,7 +35,6 @@ import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.slf4j.LoggerFactory
 import java.time.OffsetDateTime
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 private val log = LoggerFactory.getLogger(DefaultWebSocketServerSession::class.java)
@@ -76,8 +74,8 @@ class WebsocketSession(
     companion object {
         private val log = LoggerFactory.getLogger(WebsocketSession::class.java)
 
-        private const val REQUEST_TIMEOUT_MS = 10000L
-        private const val RESPONSE_TIMEOUT_MS = 10000L
+//        private const val REQUEST_TIMEOUT_MS = 10000L
+//        private const val RESPONSE_TIMEOUT_MS = 10000L
     }
 
     private val outgoingMessagesLock = Mutex()
@@ -93,10 +91,10 @@ class WebsocketSession(
 
                     log.trace("Received message '$text' [$chargePointId]")
 
-                    WebsocketMessageDeserializer.deserialize(text) { it }
+                    WebsocketMessageDeserializer.deserialize(text)
                         .fold(
                             {
-                                sendText(it.toCallError().serialize())
+                                sendText(ocpp16JsonMapper.writeValueAsString(it.toCallError()))
                             },
                             { incomingMessage ->
                                 val uniqueId = incomingMessage.uniqueId
@@ -153,7 +151,7 @@ class WebsocketSession(
             OffsetDateTime.now(),
             10L
         )
-        val callResponse = OutgoingCallResult(message.uniqueId, response).serialize()
+        val callResponse = OutgoingCallResult(message.uniqueId, response)
 //        val callResponse = messageReceiver.handleMessage(this@WebsocketSession, message.payload)
 //            .fold(
 //                {
@@ -164,48 +162,49 @@ class WebsocketSession(
 //                }
 //            )
 
-        sendText(callResponse)
+        println("RESPONDING: ${ocpp16JsonMapper.writeValueAsString(callResponse)}")
+        sendText(ocpp16JsonMapper.writeValueAsString(callResponse))
     }
 
-    suspend fun sendOutgoingCall(message: Ocpp16OutgoingRequest):
-            Deferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> {
-
-        val uniqueId = UUID.randomUUID().toString()
-        val promise: CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> = CompletableDeferred()
-
-        withContext(Dispatchers.Default) {
-            launch {
-                // Send message in background
-                withTimeout(REQUEST_TIMEOUT_MS) {
-                    outgoingMessagesLock.lock()
-                    val call = OutgoingCall(uniqueId, message.findActionName(), message)
-                    sendText(call.serialize())
-                }
-            }.invokeOnCompletion { error ->
-                // Register listener which is called when message sending is completed
-                error
-                    ?.let { // Error
-                        outgoingMessagesLock.unlock()
-                        promise.complete(GenericError("Could not send Call to client").left())
-                        log.error("Could not send Call to client [$chargePointId]")
-                    }
-                    ?: let { // Success
-                        // Create response timeout handler
-                        val receiveMessageTimeoutTask = launch {
-                            withTimeout(RESPONSE_TIMEOUT_MS) {
-                                outgoingMessagesLock.unlock()
-                                pendingIncomingCallResponses.remove(uniqueId)
-                            }
-                        }
-
-                        // Register for incoming response
-                        pendingIncomingCallResponses.put(uniqueId, promise to receiveMessageTimeoutTask)
-                    }
-            }
-        }
-
-        return promise
-    }
+//    suspend fun sendOutgoingCall(message: Ocpp16OutgoingRequest):
+//            Deferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> {
+//
+//        val uniqueId = UUID.randomUUID().toString()
+//        val promise: CompletableDeferred<Either<Ocpp16Error, Ocpp16IncomingResponse>> = CompletableDeferred()
+//
+//        withContext(Dispatchers.Default) {
+//            launch {
+//                // Send message in background
+//                withTimeout(REQUEST_TIMEOUT_MS) {
+//                    outgoingMessagesLock.lock()
+//                    val call = OutgoingCall(uniqueId, message.findActionName(), message)
+//                    sendText(call.serialize())
+//                }
+//            }.invokeOnCompletion { error ->
+//                // Register listener which is called when message sending is completed
+//                error
+//                    ?.let { // Error
+//                        outgoingMessagesLock.unlock()
+//                        promise.complete(GenericError("Could not send Call to client").left())
+//                        log.error("Could not send Call to client [$chargePointId]")
+//                    }
+//                    ?: let { // Success
+//                        // Create response timeout handler
+//                        val receiveMessageTimeoutTask = launch {
+//                            withTimeout(RESPONSE_TIMEOUT_MS) {
+//                                outgoingMessagesLock.unlock()
+//                                pendingIncomingCallResponses.remove(uniqueId)
+//                            }
+//                        }
+//
+//                        // Register for incoming response
+//                        pendingIncomingCallResponses.put(uniqueId, promise to receiveMessageTimeoutTask)
+//                    }
+//            }
+//        }
+//
+//        return promise
+//    }
 
     fun closeSession() {
         pendingIncomingCallResponses.forEach {
